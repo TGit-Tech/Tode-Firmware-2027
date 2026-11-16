@@ -16,14 +16,13 @@
 #define NSNODEMAX   0x09FF   // Sub-Screen 9 of NodeIdx 255(FF).
 
 // Nav Screens Identity
-//#define NSNONE        0xFFFF  // Used in UIBase.h
 #define NSNODE       0x0A01
 #define NSSETUP      0x0A03
-#define NSEDITNODE   0x0A04
+#define NSTODESETUP   0x0A04
 #define NSSYSTEM     0x0A05
+#define NSADDDEV     0x0A06
 
 // Multi-Use Widget Handles
-//#define WHNONE          0xFFFF  // Reserved. Used in UIBase.h
 #define WHTITLE         0x0A00
 #define WHTITLENN       0x0A01    // Screen Title Node Name
 
@@ -43,12 +42,25 @@
 #define WHEDITDEV     0x0A0C
 #define WHSYSTEM      0x0A0D
 
+// Add Device Widget Handlers
+#define WHDEVNAME     0x0A0E
+#define WHDEVTYPE     0x0A0F
+
 // 0x[F]-Key Presses Reserved in UIBase/Config.h
-//#define NAVSTAGEVAL   0xEF  // Used in UIBase.h
-//#define NAVSETVAL     0xEE  // Used in UIBase.h
 #define NAVDISPLAY    0xED  
 #define NAVGETVALS    0xEC
 #define NAVGETSETVAL  0xEB    // Only Used to verify a SETVAL
+//-------------------------------------------------------------------------
+#ifndef NSNONE
+  #define NSNONE      0xFFFF  // Should be defined in TGTWidgetsConfig.h
+#endif
+#ifndef WHNONE
+  #define WHNONE      0xFFFF  // Should be defined in TGTWidgetsConfig.h
+#endif
+//#define WHNONE          0xFFFF  // Reserved. Used in UIBase.h
+//#define NAVSTAGEVAL   0xEF  // Used in UIBase.h
+//#define NAVSETVAL     0xEE  // Used in UIBase.h
+//#define NSNONE        0xFFFF  // Used in UIBase.h
 
 class DitsUI
 {
@@ -62,11 +74,11 @@ private:
   DITSEngine* pDits = nullptr;
   Adafruit_GFX* pGFX = nullptr;
   Ebyte* pEbyte = nullptr;
-  void DumpRadio1DITS();
   TGTScreen* OnScreen = nullptr;
-  void SGValues(bool _Set = false);
-  void NodeScreen(DITSEngine::NodeDIT& node, uint8_t NavKey);
-  void SetupScreen(uint8_t NavKey);
-  void NodeEditScreen(uint8_t NavKey);
   char* tmpDITName; // General use array for DIT get Names
+
+  uint8_t NodeScreen(uint8_t NavKey, uint16_t NodeIdx);
+  uint8_t SetupMenu(uint8_t NavKey);
+  uint8_t TodeSetup(uint8_t NavKey);
+  uint8_t AddDevice(uint8_t NavKey);
 };

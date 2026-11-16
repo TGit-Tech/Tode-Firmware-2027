@@ -1,7 +1,5 @@
 #include "DitsUI.h"
 
-char testname[11] = "TestName";
-
 void DitsUI::Begin(DITSEngine& _pDits, Adafruit_GFX& _pGFX, Ebyte& _pEbyte)
 {
     pDits = &_pDits;
@@ -14,69 +12,44 @@ void DitsUI::Begin(DITSEngine& _pDits, Adafruit_GFX& _pGFX, Ebyte& _pEbyte)
     pGFX->setRotation(2);
     pGFX->setFont(&OneSlot9pt7b);
     
-    Serial.print("pDits->DITNameChar=");Serial.println(pDits->DITNameChar);
-
-    DITSEngine::NodeDIT node = pDits->Node(NSTHISNODE);
-    if(node.NodeIdx()==NSTHISNODE) { NodeScreen(node,NAVDISPLAY); }
-    else { DBUIAERROR((node.NodeIdx()),("DitsUI::Begin ?node.NodeIdx()?!=NSTHISNODE")) }
+    NodeScreen(NAVDISPLAY,NSTHISNODE);
+    DBUIAINFO((pDits->DITNameChar),("DitsUI::Begin (pDits->DITNameChar)"))
 }
 
 //'''''''''''''''''''''''''''''''''''( UI Navigation )''''''''''''''''''''''''''''''''''''''''''''''''''
 uint8_t DitsUI::ScreenNavigate(uint8_t _Button) {
   DBUIAENTER((_Button),("DitsUI::ScreenNavigate(_Button)\n"))
   if(OnScreen==nullptr) { DBUIERROR(("DitsUI::ScreenNavigate OnScreen==nullptr\n")) return _Button; }
-  uint8_t NavRtn = OnScreen->OnScreenNavigate(_Button);
-  DBUIAINFO((NavRtn,HEX),("DitsUI::ScreenNavigate (NavRtn)\n"))
+  uint8_t NavKey = OnScreen->OnScreenNavigate(_Button);
+  DBUIAINFO((NavKey,HEX),("DitsUI::ScreenNavigate returned(NavKey)\n"))
 
-  // Node Navigation
-  if(OnScreen->NScrIdx <= NSNODEMAX) {
-    DITSEngine::NodeDIT node = pDits->Node(OnScreen->NScrIdx & NODEIDXMASK);
-    if(NavRtn==NAVKEYLEFT) {
-      DBUIINFO(("DitsUI::Navigate NavRtn==NAVKEYLEFT Previous Node\n"))
-      if (node.Prev()) { NodeScreen(node,NAVDISPLAY); return NAVKEYNONE; }
-    }
-    if(NavRtn==NAVKEYRIGHT) {
-      DBUIINFO(("DitsUI::Navigate NavRtn==NAVKEYRIGHT Next Node\n"))
-      if (node.Next()) { NodeScreen(node,NAVDISPLAY);return NAVKEYNONE; }
-    }
-    if(NavRtn==NAVKEYGET) { NodeScreen(node,NAVGETVALS); return NAVKEYNONE; }
-    if(NavRtn==NAVKEYSET) { // SET on This Node Title triggers Setup Menu
-      if(node.NodeIdx()==0 && OnScreen->SelectedWHandleUID()==WHTITLE) {
-        SetupScreen(NAVDISPLAY);
-      }
-    }
-    return NavRtn;
-
-  // Setup Navigation
-  } else if(OnScreen->NScrIdx == NSSETUP) {
-    if(NavRtn==NAVKEYGET) { 
-      switch(OnScreen->SelectedWHandleUID()) {
-        case WHADDRNODE: return NAVKEYNONE;
-        case WHDELRNODE: return NAVKEYNONE;
-        case WHEDITNODE: NodeEditScreen(NAVDISPLAY); return NAVKEYNONE;
-        case WHADDDEV: return NAVKEYNONE;
-        case WHDELDEV: return NAVKEYNONE;
-        case WHEDITDEV: return NAVKEYNONE;
-        case WHSYSTEM: return NAVKEYNONE;
-      }
-    }
-    if(NavRtn==NAVSETVAL) { SetupScreen(NAVSETVAL); return NAVKEYNONE; }
-    if(NavRtn==NAVKEYLEFT) { 
-      DITSEngine::NodeDIT node = pDits->Node(NSTHISNODE);
-      NodeScreen(node, NAVDISPLAY); return NAVKEYNONE; }
-  
-  // Edit Node Navigation
-  } else if (OnScreen->NScrIdx == NSEDITNODE) {
-    if(NavRtn==NAVSETVAL)   { NodeEditScreen(NAVSETVAL);  return NAVKEYNONE; }
-    if(NavRtn==NAVKEYLEFT)  { SetupScreen(NAVDISPLAY);    return NAVKEYNONE; }
-  }
-
+  // Screen Navigation by Screen Functions
+  if(OnScreen->NScrIdx <= NSNODEMAX) { return NodeScreen(NavKey,(OnScreen->NScrIdx & NODEIDXMASK)); }
+  else if(OnScreen->NScrIdx == NSSETUP) { return SetupMenu(NavKey); }
+  else if(OnScreen->NScrIdx == NSTODESETUP) { return TodeSetup(NavKey); }
+  else if(OnScreen->NScrIdx == NSADDDEV) { return AddDevice(NavKey); }
+  return NavKey;
 }
+//------------------------------------------------------------------------------------------------
+// When Launching a New Screen discard return.  Example: SetupMenu(NAVDISPLAY); return NAVKEYNONE;
+uint8_t DitsUI::NodeScreen(uint8_t NavKey, uint16_t NodeIdx) {
+  DBUIAAENTER((NavKey,HEX),(NodeIdx),("DitsUI::NodeScreen(NavKey,NodeIdx)\n"))
 
-
-
-void DitsUI::NodeScreen(DITSEngine::NodeDIT& node, uint8_t NavKey) {
-  DBUIAENTER((NavKey,HEX),("DitsUI::NodeScreen(NavKey)\n"))
+  DITSEngine::NodeDIT node = pDits->Node(NodeIdx);
+  if(NavKey==NAVKEYLEFT) {
+    DBUIINFO(("DitsUI::Navigate NavKey==NAVKEYLEFT Previous Node\n"))
+    if (node.Prev()) { NavKey=NAVDISPLAY; }
+  }
+  if(NavKey==NAVKEYRIGHT) {
+    DBUIINFO(("DitsUI::Navigate NavKey==NAVKEYRIGHT Next Node\n"))
+    if (node.Next()) { NavKey=NAVDISPLAY; }
+  }
+  if(NavKey==NAVKEYGET) { NavKey=NAVGETVALS; }
+  if(NavKey==NAVKEYSET) { // SET on This Node Title triggers Setup Menu
+    if(node.NodeIdx()==0 && OnScreen->SelectedWHandleUID()==WHTITLE) {
+      SetupMenu(NAVDISPLAY); return NAVKEYNONE;
+    }
+  }
 
   if(NavKey==NAVDISPLAY) {
     delete OnScreen; OnScreen = nullptr; int row = 0;
@@ -91,11 +64,27 @@ void DitsUI::NodeScreen(DITSEngine::NodeDIT& node, uint8_t NavKey) {
       OnScreen->NewWChLabel(row+1,TFT_COL_X(0), TFT_ROW_Y(row),pDits->DITNameChar,tmpDITName);
     }
     OnScreen->DisplayScreen();
+    return NAVKEYNONE;
   }
+  return NavKey;
 }
-void DitsUI::SetupScreen(uint8_t NavKey) {
-  DBUIAENTER((NavKey,HEX),("DitsUI::SetupScreen(NavKey)\n"))
+//------------------------------------------------------------------------------------------------
+uint8_t DitsUI::SetupMenu(uint8_t NavKey) {
+  DBUIAENTER((NavKey,HEX),("DitsUI::SetupMenu(NavKey)\n"))
   
+  if(NavKey==NAVKEYGET) { 
+    switch(OnScreen->SelectedWHandleUID()) {
+      case WHADDRNODE: return NAVKEYNONE;
+      case WHDELRNODE: return NAVKEYNONE;
+      case WHEDITNODE: TodeSetup(NAVDISPLAY); return NAVKEYNONE;
+      case WHADDDEV: AddDevice(NAVDISPLAY); return NAVKEYNONE;
+      case WHDELDEV: return NAVKEYNONE;
+      case WHEDITDEV: return NAVKEYNONE;
+      case WHSYSTEM: return NAVKEYNONE;
+    }
+  }
+  if(NavKey==NAVKEYLEFT) { NodeScreen(NAVDISPLAY,NSTHISNODE); return NAVKEYNONE; }
+
   if(NavKey==NAVDISPLAY) {
     delete OnScreen;  OnScreen = nullptr;
     OnScreen = new TGTScreen(*pGFX,NSSETUP);
@@ -109,19 +98,24 @@ void DitsUI::SetupScreen(uint8_t NavKey) {
     OnScreen->NewWFLabel  (8,TFT_COL_X(0), TFT_ROW_Y(7), F("System"),    WHSYSTEM);
 
     OnScreen->DisplayScreen();
+    return NAVKEYNONE;
   }
+  return NavKey;
 }
-
-void DitsUI::NodeEditScreen(uint8_t NavKey) {
-  DBUIAENTER((NavKey,HEX),("DitsUI::NodeEditScreen(NavKey)\n"))
+//------------------------------------------------------------------------------------------------
+uint8_t DitsUI::TodeSetup(uint8_t NavKey) {
+  DBUIAENTER((NavKey,HEX),("DitsUI::TodeSetup(NavKey)\n"))
   uint16_t SetWH = OnScreen->SetValueWH;
+
+  if(NavKey==NAVSETVAL)   { NavKey=NAVSETVAL; }
+  if(NavKey==NAVKEYLEFT)  { SetupMenu(NAVDISPLAY); return NAVKEYNONE; }
 
   if(NavKey==NAVDISPLAY) {
     delete OnScreen;  OnScreen = nullptr;
-    OnScreen = new TGTScreen(*pGFX,NSEDITNODE);
+    OnScreen = new TGTScreen(*pGFX,NSTODESETUP);
     OnScreen->NewWFLabel  (1,TFT_COL_X(0), TFT_ROW_Y(0), F("Edit Tode"));
     OnScreen->NewWFLabel  (0,TFT_COL_X(0), TFT_ROW_Y(1), F("Name:"));
-    OnScreen->NewWCharVal (2,TFT_COL_X(5), TFT_ROW_Y(1), 11, true, WHNODENAME);
+    OnScreen->NewWCharVal (2,TFT_COL_X(5), TFT_ROW_Y(1), pDits->DITNameChar, true, WHNODENAME);
     OnScreen->NewWFLabel  (0,TFT_COL_X(0), TFT_ROW_Y(2), F("SecNet:"));
     OnScreen->NewWNumVal  (3,TFT_COL_X(7), TFT_ROW_Y(2), VDTBYTE, HEX, true, WHSECNET);
     OnScreen->NewWFLabel  (0,TFT_COL_X(0), TFT_ROW_Y(3), F("Radio:"));
@@ -155,11 +149,48 @@ void DitsUI::NodeEditScreen(uint8_t NavKey) {
     bool bAll = (NavKey==NAVGETVALS);
     if(SetWH==WHNODENAME||bAll) {
       DITSEngine::NodeDIT node = pDits->Node(0); node.NGetName(tmpDITName);
-      OnScreen->gotValue(NSEDITNODE, WHNODENAME, tmpDITName);
+      OnScreen->gotValue(NSTODESETUP, WHNODENAME, tmpDITName);
     }
-    if(SetWH==WHSECNET||bAll)   { OnScreen->gotValue(NSEDITNODE, WHSECNET, pDits->SecNetCode()); }
-    if(SetWH==WHRADIOID||bAll)  { OnScreen->gotValue(NSEDITNODE, WHRADIOID, pEbyte->RadioID()); }
-    if(SetWH==WHNETID||bAll)    { OnScreen->gotValue(NSEDITNODE, WHNETID, pEbyte->NetID()); }
-    if(SetWH==WHRFADDR||bAll)   { OnScreen->gotValue(NSEDITNODE, WHRFADDR, pEbyte->Address()); }
+    if(SetWH==WHSECNET||bAll)   { OnScreen->gotValue(NSTODESETUP, WHSECNET, pDits->SecNetCode()); }
+    if(SetWH==WHRADIOID||bAll)  { OnScreen->gotValue(NSTODESETUP, WHRADIOID, pEbyte->RadioID()); }
+    if(SetWH==WHNETID||bAll)    { OnScreen->gotValue(NSTODESETUP, WHNETID, pEbyte->NetID()); }
+    if(SetWH==WHRFADDR||bAll)   { OnScreen->gotValue(NSTODESETUP, WHRFADDR, pEbyte->Address()); }
+    return NAVKEYNONE;
+  }
+  return NavKey;
+}
+//------------------------------------------------------------------------------------------------
+uint8_t DitsUI::AddDevice(uint8_t NavKey) {
+  DBUIAENTER((NavKey,HEX),("DitsUI::AddDevice(NavKey)\n"))
+  
+  if(NavKey==NAVKEYLEFT)  { SetupMenu(NAVDISPLAY); return NAVKEYNONE; }
+
+  if(NavKey==NAVDISPLAY) {
+    delete OnScreen;  OnScreen = nullptr;
+    OnScreen = new TGTScreen(*pGFX,NSADDDEV);
+    OnScreen->NewWFLabel  (1,TFT_COL_X(0), TFT_ROW_Y(0), F("Add Device"),WHTITLE);
+    OnScreen->NewWFLabel  (0,TFT_COL_X(0), TFT_ROW_Y(1), F("Name:"));
+    OnScreen->NewWCharVal (2,TFT_COL_X(5), TFT_ROW_Y(1), pDits->DITNameChar, true, WHDEVNAME);
+    OnScreen->NewWFLabel  (0,TFT_COL_X(0), TFT_ROW_Y(2), F("Type:"));
+    OnScreen->NewWEnumVal (3,TFT_COL_X(6), TFT_ROW_Y(2), true, WHDEVTYPE);
+    //OnScreen->NewWFLabel  (0,TFT_COL_X(0), TFT_ROW_Y(2), F("SecNet:"));
+    //OnScreen->NewWNumVal  (3,TFT_COL_X(7), TFT_ROW_Y(2), VDTBYTE, HEX, true, WHSECNET);
+    //OnScreen->NewWFLabel  (0,TFT_COL_X(0), TFT_ROW_Y(3), F("Radio:"));
+    
+    //OnScreen->NewWFLabel  (0,TFT_COL_X(0), TFT_ROW_Y(4), F("NetID:"));
+    //OnScreen->NewWNumVal  (4,TFT_COL_X(6), TFT_ROW_Y(4), VDTUINT, HEX, true, WHNETID);
+    //OnScreen->NewWFLabel  (0,TFT_COL_X(0), TFT_ROW_Y(5), F("RFAddr:"));
+    //OnScreen->NewWNumVal  (5,TFT_COL_X(7), TFT_ROW_Y(5), VDTUINT, HEX, true, WHRFADDR);
+
+    OnScreen->AddEnum(WHDEVTYPE,DT_ONOFF,F("OnOff"));
+    OnScreen->AddEnum(WHDEVTYPE,DT_DIST,F("Distance"));
+    OnScreen->AddEnum(WHDEVTYPE,DT_STSTP3W,F("StartStop3W"));
+    OnScreen->AddEnum(WHDEVTYPE,DT_ANAINPUT,F("AnalogIn"));
+    OnScreen->AddEnum(WHDEVTYPE,DT_ANAOUTPUT,F("AnalogOut"));
+    OnScreen->AddEnum(WHDEVTYPE,DT_DLSETPOINT,F("DLSetPoint"));
+    OnScreen->AddEnum(WHDEVTYPE,DT_DLMATH,F("DLMath"));
+
+    OnScreen->DisplayScreen();
+    NavKey = NAVGETVALS;
   }
 }
