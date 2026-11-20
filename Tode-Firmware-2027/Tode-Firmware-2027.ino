@@ -4,6 +4,7 @@
 #include <Adafruit_ST7735.h>
 #include "DigKeyPadBD241S.h"
 #include <Ebyte.h>
+#include "TDevices.h"
 
 //#include "C:/Users/TGIT-TECH/Documents/!GitHub/RF-DITS_protocol_spec/includes/RadioI"
 
@@ -70,15 +71,21 @@ class RAMLBmgrDIT : public DITSEngine {
   public:
     //DITSEngine(uint16_t _pmemBeginAddr, byte _MaxDITRecords, byte _NameFieldBytes);
     // Total Persistant Memory Allocated = MaxDITRecords * (NameFieldBytes + 4) + 1
-    RAMLBmgrDIT() : DITSEngine(0,40,10) {memset(RAM_EEPROM, 0xFF, sizeof(RAM_EEPROM));}
+    RAMLBmgrDIT(DitsUI& _dUI, TDevices& _LocalDevices) : DITSEngine(0,40,10),
+    dUI(_dUI), LocalDevices(_LocalDevices)
+    {memset(RAM_EEPROM, 0xFF, sizeof(RAM_EEPROM));}
     void ConnectTo(DITSEngine& _pOtherDitsObj) { pOtherDitsObj=&_pOtherDitsObj; }
   protected:
-    virtual void RxDataDevValue(byte _NodeIdx, byte _DevUID, int value) override {
+    virtual void RxDataDevValue(byte _NodeIdx, byte _DevUID, int _Value) override {
       // Record supplied values of a remote node.
+      dUI.gotValue(_NodeIdx,_DevUID,_Value);  //OnScreen->gotValue(NSTODESETUP, WHNODENAME, tmpDITName);
     }
-    virtual int RxReqDeviceValue(byte ditIdx) override { return 42; }
-    virtual void RxReqDeviceSet(byte _DevUID, int value) override { 
-        Serial.print(F("INO.RxReqDeviceSet devUID("));Serial.print(_DevUID);Serial.print(") -to- "); Serial.print(value);
+    virtual int RxReqDeviceValue(byte _DevUID) override { 
+      LocalDevices.DeviceGet(_DevUID);
+    }
+    virtual void RxReqDeviceSet(byte _DevUID, int _Value) override { 
+      LocalDevices.DeviceSet(_DevUID,_Value);
+      DBHAAINFO((_DevUID,HEX),(_Value),("LocalDevices.DeviceSet(_DevUID,value) from RxReqDeviceSet"))
     }
     virtual bool TxReady(uint16_t _ToRFAddr) override { 
       return true; //SPort.availableForWrite() > 58; // We know Mega UART has 64b buffer so okay to use this.
@@ -94,20 +101,26 @@ class RAMLBmgrDIT : public DITSEngine {
   private: 
     byte RAM_EEPROM[0x0300];
     DITSEngine* pOtherDitsObj = nullptr;
+    DitsUI& dUI;
+    TDevices& LocalDevices;
 };
-//EEmgrDIT  Radio1;
-RAMLBmgrDIT Radio1;
-RAMLBmgrDIT Radio2;
 
 char* tmpname; // General use array for DIT get Names
-
+uint8_t NavKey = 0;
 //UI
 Adafruit_ST7735 oDSP(DISPPINS); //TFT(cs, dc(rs)(cd), rst)
 DitsUI dUI;
 KeyPad* ButtonCapture = nullptr;
 Ebyte oEbyte(RFPINS);
+TDevices LocalDevices;
 uint32_t msTimer = 0;
 int iTestStep = 0;
+
+//EEmgrDIT  Radio1;
+RAMLBmgrDIT Radio1(dUI,LocalDevices);
+RAMLBmgrDIT Radio2(dUI,LocalDevices);
+
+
 
 
 //-------------------------------------
@@ -201,8 +214,11 @@ void setup() {
   Radio1.AddThisNodeDevice(DT_ANAINPUT, DRO, "devtemp");
   Radio2.AddThisNodeDevice(DT_ONOFF, DRW, "2onoff1");
   Radio2.AddThisNodeDevice(DT_ONOFF, DRW, "2onoff2");
-
-  dUI.Begin(Radio1, oDSP, oEbyte);      //Start DitsUI
+  // Load Local Devices from pDits.
+  DITSEngine::DeviceDIT dev = Radio1.Device();
+  while (dev.Next(THISNODEIDX)) { LocalDevices.AddDevice(dev.DevUID(),dev.DevType()); }
+  // Start DitsUI
+  dUI.Begin(Radio1, oDSP, oEbyte);
 }
 
 void loop() {
@@ -210,7 +226,7 @@ void loop() {
   uint8_t yButton = ButtonCapture->Button();
   if(yButton!=NAVKEYNONE) {
     //Serial.println("Button Pressed.");
-    dUI.ScreenNavigate(yButton);
+    NavKey = dUI.ScreenNavigate(yButton);
   }
   if (millis()-msTimer >= 2000) { 
     msTimer=millis(); iTestStep++; 
@@ -219,8 +235,15 @@ void loop() {
       DumpRadio1DITS(); DumpRadio2DITS();
     }
   }
+  if(NavKey==NAVNEWDEVICE) {
+    LocalDevices.AddDevice(dUI.AdddevUID, dUI.Add_devType);
+    dUI.AdddevUID = BNONE; dUI.Add_devType = BNONE;
+  }
   Radio1.ProcessLoop();
   Radio2.ProcessLoop();
+  // loop back
   while (Serial1.available()>0) {Radio1.RxData(Serial1.read());}
   while (Serial2.available()>0) {Radio2.RxData(Serial2.read());}  
+  // Call Loop on Local Devices.
+  LocalDevices.Loop();
 }

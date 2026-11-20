@@ -38,7 +38,7 @@ void InitRAMMem() {memset(RAMMem, 0xFF, sizeof(RAMMem));}     // Sim Function to
 //(0) 8-bits  0-254  devUID
 //(1) 2-bits  0-3   Pin1 PinMode
 //(2) 6-bits  0-63  Pin1
-//(3) 2-bits  0-3   Pin2 PinMode
+//(3) 2-bits  0-3   Pin2 PinMode (or Pin1 Active)
 //(4) 6-bits  0-63  Pin2
 SETGSDigital::SETGSDigital(byte devUID) : args{8,2,6,2,6}, bf(args,5) {
   for (int adr=DIGMATH_STARTADDR; adr<ANALOG_STARTADDR ; adr=adr+DIGMATH_LSETGBYTES) { 

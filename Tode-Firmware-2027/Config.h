@@ -20,6 +20,31 @@
 #define DISPLIGHTPIN 4            //IO-Access backplane Display Backlight Pin
 #define DISPLIGHTACTIVE HIGH
 
+#define THISNODEIDX 0
+
+///@defgroup DT [DT] Device-Type enumeration.
+/// DITS provides 1-byte to designate Device Type definitions.
+/// Never (0) as RF uses null-termination '\0' to seperate records.
+/// Prevent usage of (0xF?) packet types as they help signal beginning of packets.
+///@{
+// 0x[7] Device Types
+#define DT_NOTSET       0x7F
+#define DT_ONOFF        0x7E    ///< On/Off Switching Device
+#define DT_DIST         0x7A    ///< Distance Sensing Device
+#define DT_STSTP3W      0x79    ///< Start Stop 3-Wire
+#define DT_ANAINPUT     0x78    ///< Analog Device (Pressure, Temperature)
+#define DT_ANAOUTPUT    0x77    ///< Analog Output (PWM control)
+#define DT_DLSETPOINT   0x76    ///< Dev Logic Control Boundary
+#define DT_DLMATH       0x75    ///< Dev Logic Compare / Math Device
+
+#define DT_MINBOUNDARY  0x75    ///< MINIMUM BOUNDARY CHECK FOR ADD DEVICE KEYS
+///@}
+
+#define ACTIVEHION  0
+#define ACTIVELOWON 1
+
+
+/* OLD TODE STUFF
 ///@defgroup DT [DT] Device-Type enumeration.
 /// DITS provides 1-byte to designate Device Type definitions.
 /// Never (0) as RF uses null-termination '\0' to seperate records.
@@ -36,3 +61,25 @@
 
 #define DT_MINBOUNDARY  0x75    ///< MINIMUM BOUNDARY CHECK FOR ADD DEVICE KEYS
 ///@}
+
+///@defgroup DCSP [DT] Device Control Set Point enumeration. NOT part of DITS. 
+///@{
+#define DCSPO_MIN   0
+#define DCSPO_OFF   0    ///< Less Than or Equal To
+#define DCSPO_ON    1    ///< Greater Than or Equal To
+#define DCSPO_INCR  2    ///< Equal To
+#define DCSPO_DECR  3
+#define DCSPO_MAX   3
+///@}
+
+///@defgroup DCLM [DT] Device Control Logic Mathematics. NOT part of DITS     
+///@{
+#define DCLM_ADD        0x00    ///< Less Than or Equal To
+#define DCLM_SUBTRACT   0x01    ///< Greater Than or Equal To
+#define DCLM_MULTIPLY   0x02    ///< Equal To
+#define DCLM_DIVIDE     0x03    ///< Not Equal To
+#define DCLM_AVERAGE    0x04
+#define DCLM_COPY       0x05
+#define DCLM_ICOPY      0x06
+///@}
+*/

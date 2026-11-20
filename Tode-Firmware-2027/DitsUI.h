@@ -3,11 +3,17 @@
 #pragma once
 
 #include "Config.h"
+#include <Arduino.h>
 #include <rf_dits.h>
 #include <Adafruit_ST7735.h>
 #include <OneSlot9pt7b.h>
 #include <Ebyte.h>
 #include <TGTWidgets.h>     // Setup Base Class
+#include "SETGS.h"
+
+#define BNONE     0xFF    ///< Byte NONE/UNSET
+#define INONE     0xFFFF  ///< Integer NONE/UNSET
+#define SINONE    0x8000  ///< Signed Integer NONE/UNSET
 
 // UI Navigation Screens & Navigation Commands
 // Nav Screens Dynamic
@@ -36,7 +42,7 @@
 // Setup Screen Widget Handles
 #define WHADDRNODE    0x0A07
 #define WHDELRNODE    0x0A08
-#define WHEDITNODE    0x0A09
+#define WHTODESETUP    0x0A09
 #define WHADDDEV      0x0A0A
 #define WHDELDEV      0x0A0B
 #define WHEDITDEV     0x0A0C
@@ -45,11 +51,16 @@
 // Add Device Widget Handlers
 #define WHDEVNAME     0x0A0E
 #define WHDEVTYPE     0x0A0F
+#define WHIOPIN       0x0A10
+#define WHPINMODE     0x0A11
+#define WHACTIVE      0x0A12
+#define WHADDBTN      0x0A13
 
-// 0x[F]-Key Presses Reserved in UIBase/Config.h
+// 0x[E]- Event Drivers ... Key Presses Reserved in UIBase/Config.h
 #define NAVDISPLAY    0xED  
 #define NAVGETVALS    0xEC
 #define NAVGETSETVAL  0xEB    // Only Used to verify a SETVAL
+#define NAVNEWDEVICE  0xEA
 //-------------------------------------------------------------------------
 #ifndef NSNONE
   #define NSNONE      0xFFFF  // Should be defined in TGTWidgetsConfig.h
@@ -61,14 +72,23 @@
 //#define NAVSTAGEVAL   0xEF  // Used in UIBase.h
 //#define NAVSETVAL     0xEE  // Used in UIBase.h
 //#define NSNONE        0xFFFF  // Used in UIBase.h
-
+/*
+    OnScreen->NewWCharVal (2,TFT_COL_X(5), TFT_ROW_Y(1), pDits->DITNameChar, true, WHDEVNAME); //tmpDITName
+    memset(tmpDITName, 0, pDits->DITNameChar);
+    OnScreen->gotValue(NSTODESETUP, WHDEVNAME, tmpDITName);
+*/    
 class DitsUI
 {
 public:
   DitsUI::~DitsUI() {   }
   
+  byte Add_devType = DT_NOTSET;
+  uint8_t AdddevUID = BNONE;
+
   void Begin(DITSEngine& _dits, Adafruit_GFX& _gfx, Ebyte& _pEbyte);
   uint8_t ScreenNavigate(uint8_t _Button);
+  //bool gotValue(NSTODESETUP, WHNODENAME, tmpDITName);
+  bool gotValue(uint16_t NScrIdx, uint16_t WHandleUID, uint16_t _Value);
 
 private:
   DITSEngine* pDits = nullptr;
@@ -76,6 +96,10 @@ private:
   Ebyte* pEbyte = nullptr;
   TGTScreen* OnScreen = nullptr;
   char* tmpDITName; // General use array for DIT get Names
+
+  byte Add_IOPin = 0;
+  byte Add_pinMode = 0;
+  byte Add_Active = 0;
 
   uint8_t NodeScreen(uint8_t NavKey, uint16_t NodeIdx);
   uint8_t SetupMenu(uint8_t NavKey);

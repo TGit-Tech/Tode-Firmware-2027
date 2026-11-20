@@ -14,8 +14,6 @@
 #include <TGTDB.h>
 #include <TGTWidgetsConfig.h>
 
-
-
 //#####################################################################################################
 namespace ButtonISR {
   unsigned long Debounce = 150;                   // Debounce button milliseconds
