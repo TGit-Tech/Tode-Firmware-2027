@@ -1,6 +1,6 @@
 #include "DitsUI.h"
 
-void DitsUI::Begin(DITSEngine& _pDits, Adafruit_GFX& _pGFX, Ebyte& _pEbyte)
+void DitsUI::Begin(DITSEngine& _pDits, Adafruit_GFX& _pGFX, TGTEbyte& _pEbyte)
 {
     pDits = &_pDits;
     pGFX = &_pGFX;
@@ -64,7 +64,30 @@ uint8_t DitsUI::NodeScreen(uint8_t NavKey, uint16_t NodeIdx) {
     while (row < TFT_ROWS - 1 && dev.Next(node.NodeIdx())) {
       row++; // Note: WHandleUID is DevUID
       dev.DGetName(tmpDITName);
-      OnScreen->NewWChLabel(row+1,TFT_COL_X(0), TFT_ROW_Y(row),pDits->DITNameChar,tmpDITName);
+      OnScreen->NewWChLabel(0,TFT_COL_X(0), TFT_ROW_Y(row),pDits->DITNameChar,tmpDITName); // Label
+      switch(dev.DevType()) {
+        case DT_ONOFF:
+        case DT_STSTP3W:
+          OnScreen->NewWEnumVal (row+1,TFT_COL_X(10), TFT_ROW_Y(row), true, dev.DevUID());
+          OnScreen->AddEnum(dev.DevUID(),0,F("OFF"));
+          OnScreen->AddEnum(dev.DevUID(),1,F("ON"));
+          break;
+        case DT_DIST:
+          OnScreen->NewWNumVal( row+1,TFT_COL_X(10), TFT_ROW_Y(row), TUINT+TDEC,dev.DevUID());
+          break;
+        case DT_ANAINPUT:
+          OnScreen->NewWNumVal( row+1,TFT_COL_X(10), TFT_ROW_Y(row),  TUINT+TDEC,dev.DevUID());
+          break;
+        case DT_ANAOUTPUT:
+          OnScreen->NewWNumVal( row+1,TFT_COL_X(10), TFT_ROW_Y(row),  TUINT+TDEC+TSETPD,dev.DevUID());
+          break;
+        case DT_DLSETPOINT:
+          OnScreen->NewWNumVal( row+1,TFT_COL_X(10), TFT_ROW_Y(row),  TUINT+TDEC+TSETPD,dev.DevUID());
+          break;
+        case DT_DLMATH:
+          OnScreen->NewWNumVal( row+1,TFT_COL_X(10), TFT_ROW_Y(row),  TUINT+TDEC,dev.DevUID());
+          break;
+      }
     }
     //OnScreen->DisplayScreen();
     return NAVKEYNONE;

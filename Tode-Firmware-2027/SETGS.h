@@ -1,6 +1,7 @@
 ///@file    SETGS.h
 ///@brief   Device Local Settings in Persistant Memory class.
 #pragma once
+
 #include <Arduino.h>
 #if __has_include("Config.h")
     #include "Config.h"
@@ -11,6 +12,18 @@
 #define BNONE     0xFF    ///< Byte NONE/UNSET
 #define INONE     0xFFFF  ///< Integer NONE/UNSET
 #define SINONE    0x8000  ///< Signed Integer NONE/UNSET
+
+constexpr uint8_t DT_NOTSET =       0x7F;
+constexpr uint8_t DT_ONOFF =        0x7E;    ///< On/Off Switching Device
+constexpr uint8_t DT_DIST =         0x7A;    ///< Distance Sensing Device
+constexpr uint8_t DT_STSTP3W =      0x79;    ///< Start Stop 3-Wire
+constexpr uint8_t DT_ANAINPUT =     0x78;    ///< Analog Device (Pressure, Temperature)
+constexpr uint8_t DT_ANAOUTPUT =    0x77;    ///< Analog Output (PWM control)
+constexpr uint8_t DT_DLSETPOINT =   0x76;    ///< Dev Logic Control Boundary
+constexpr uint8_t DT_DLMATH =       0x75;    ///< Dev Logic Compare / Math Device
+
+constexpr uint8_t ACTIVEHION =      0x73;
+constexpr uint8_t ACTIVELOWON =     0x74;    ///< Dev Logic Compare / Math Device
 
 //Setpoint 'Enum Timeframe' Multiply all by 2,000 for ms.
 void InitRAMMem();
