@@ -115,17 +115,16 @@ public:
   
   byte Add_devType = BNONE;
   uint8_t AdddevUID = BNONE;
+  TGTScreen* OnScreen = nullptr;
 
   void Begin(DITSEngine& _dits, Adafruit_GFX& _gfx, TGTEbyte& _pEbyte);
   uint8_t ScreenNavigate(uint8_t _Button);
-  //bool gotValue(NSTODESETUP, WHNODENAME, tmpDITName);
   bool gotValue(uint16_t NScrIdx, uint16_t WHandleUID, uint16_t _Value);
 
 private:
   DITSEngine* pDits = nullptr;
   Adafruit_GFX* pGFX = nullptr;
   TGTEbyte* pEbyte = nullptr;
-  TGTScreen* OnScreen = nullptr;
   char* tmpDITName; // General use array for DIT get Names
 
   byte Add_IOPin = 0;

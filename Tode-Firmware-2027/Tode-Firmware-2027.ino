@@ -85,10 +85,10 @@ void setup() {
   
   // Assign local device settings
   //NewOnOffDevice(uint8_t _devUID, uint8_t Pin, uint8_t _pnMode)
-  LDevs.NewOnOffDevice(R1devUID, 20, OUTPUT);
-  LDevs.NewOnOffDevice(R2devUID, 21, OUTPUT);
-  LDevs.NewOnOffDevice(R3devUID, 22, OUTPUT);
-  LDevs.NewOnOffDevice(R4devUID, 23, OUTPUT);
+  LDevs.NewOnOffDevice(R1devUID, 20, OUTPUT, true);
+  LDevs.NewOnOffDevice(R2devUID, 21, OUTPUT, true);
+  LDevs.NewOnOffDevice(R3devUID, 22, OUTPUT, true);
+  LDevs.NewOnOffDevice(R4devUID, 23, OUTPUT, true);
   
   // Start DitsUI
   dUI.Begin(DITS, oDSP, oEbyte);
@@ -97,11 +97,32 @@ void setup() {
 void loop() {
   if(DITS.ProcLoop()==RDEVLOADED) { /*Send Remote Values to UI*/ }
 
-  uint8_t yButton = ButtonCapture->Button();
-  if(yButton!=NAVKEYNONE) { NavKey = dUI.ScreenNavigate(yButton); } // Send Button Presses
-  if(NavKey==NAVNEWDEVICE) {                                        // Process NavKeys
-    //DITS.AddThisNodeDevice()
-    //DITS.AddDevice(dUI.AdddevUID, dUI.Add_devType);
-    dUI.AdddevUID = BNONE; dUI.Add_devType = BNONE;
+  if(dUI.OnScreen!=nullptr) {
+    if(dUI.OnScreen->NScrIdx==NSTHISNODE) {
+      // Load Local Device Values on Every Loop
+      DITSEngine::DeviceDIT dev = DITS.Device();
+      while (dev.Next(0)) {
+        dUI.gotValue( 0, dev.DevUID(),  LDevs.Value(dev.DevUID()) );
+      }
+    }
   }
+
+  // Send Button Presses
+  uint8_t yButton = ButtonCapture->Button();
+  if(yButton!=NAVKEYNONE) { 
+    NavKey = dUI.ScreenNavigate(yButton);
+  
+    if(NavKey==NAVNEWDEVICE) {
+      //DITS.AddThisNodeDevice()
+      //DITS.AddDevice(dUI.AdddevUID, dUI.Add_devType);
+      dUI.AdddevUID = BNONE; dUI.Add_devType = BNONE;
+    }
+    if(NavKey==NAVSETVAL) {
+      if(dUI.OnScreen->NScrIdx==NSTHISNODE) {
+        // A Device was Set on This Node.
+        uint16_t WHdevUID = dUI.OnScreen->SelectedWHandleUID();
+        LDevs.Value(WHdevUID,dUI.OnScreen->SelectedWValue());
+      }
+    }
+  } // End Button NavKey.
 }

@@ -22,8 +22,8 @@ constexpr uint8_t DT_ANAOUTPUT =    0x77;    ///< Analog Output (PWM control)
 constexpr uint8_t DT_DLSETPOINT =   0x76;    ///< Dev Logic Control Boundary
 constexpr uint8_t DT_DLMATH =       0x75;    ///< Dev Logic Compare / Math Device
 
-constexpr uint8_t ACTIVEHION =      0x73;
-constexpr uint8_t ACTIVELOWON =     0x74;    ///< Dev Logic Compare / Math Device
+constexpr uint8_t ACTIVEHION =      0;
+constexpr uint8_t ACTIVELOWON =     1;    ///< Stored on Pin2Mode.
 
 //Setpoint 'Enum Timeframe' Multiply all by 2,000 for ms.
 void InitRAMMem();

@@ -89,7 +89,6 @@ uint8_t DitsUI::NodeScreen(uint8_t NavKey, uint16_t NodeIdx) {
           break;
       }
     }
-    //OnScreen->DisplayScreen();
     return NAVKEYNONE;
   }
   return NavKey;
@@ -123,7 +122,6 @@ uint8_t DitsUI::SetupMenu(uint8_t NavKey) {
     OnScreen->NewWFLabel  (7,TFT_COL_X(0), TFT_ROW_Y(6), F("Edit Dev"),  WHEDITDEV);
     OnScreen->NewWFLabel  (8,TFT_COL_X(0), TFT_ROW_Y(7), F("System"),    WHSYSTEM);
 
-    //OnScreen->DisplayScreen();
     return NAVKEYNONE;
   }
   return NavKey;
@@ -160,7 +158,6 @@ uint8_t DitsUI::TodeSetup(uint8_t NavKey) {
     OnScreen->AddEnum(WHRADIOID,6,F("E32433T30D"));
     OnScreen->AddEnum(WHRADIOID,7,F("E220400T30D"));
 
-    //OnScreen->DisplayScreen();
     NavKey = NAVGETVALS;
   }
   if(NavKey==NAVSETVAL) {
@@ -226,7 +223,6 @@ uint8_t DitsUI::AddDevice(uint8_t NavKey) {
     memset(tmpDITName, 0, pDits->DITNameChar);
     OnScreen->gotValue(NSADDDEV, WHDEVNAME, tmpDITName);
 
-    //OnScreen->DisplayScreen();
     NavKey = NAVGETVALS;
   }
   if(NavKey==NAVSETVAL) {
