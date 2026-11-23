@@ -6,7 +6,7 @@
 #include "DigKeyPadBD241S.h"
 #include <TGTEbyte.h>
 
-#define RFSERIAL Serial1
+#define RFSERIAL Serial1      // Tode 'Serial1' JMP-wire, BD241S 'Serial3' Ebyte
 //#define RELAYNODE           // On Compile: Comment out for Handheld.  Leave for Node connected to Relays.
 
 //UI
@@ -96,7 +96,7 @@ void setup() {
   #else
     DITS.UpdateThisNodeName("Handheld");
     DITS.UpdateThisNodeRFAddr(0x0002);  // Make sure DITS has the correct RF Address on record.
-    DITS.TxAddRemoteNode(0x0001);
+    //DITS.TxAddRemoteNode(0x0001);
   #endif
   // Start DitsUI
   dUI.Begin(DITS, oDSP, oEbyte);
@@ -136,6 +136,8 @@ void loop() {
       } else if (ScrIdx<=NSNODEMAX) {
         uint8_t NodeIndex = ScrIdx & 0xFF;
         DITS.TxSetRemoteDevVal(NodeIndex, WHdevUID, WValue);
+      } else if (ScrIdx==NSSETUP) {
+        if(WHdevUID==WHADDRNODE) { DITS.TxAddRemoteNode(WValue); }
       }
     }
   } // End Button NavKey.

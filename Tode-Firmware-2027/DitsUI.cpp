@@ -114,7 +114,8 @@ uint8_t DitsUI::SetupMenu(uint8_t NavKey) {
     delete OnScreen;  OnScreen = nullptr;
     OnScreen = new TGTScreen(*pGFX,NSSETUP);
     OnScreen->NewWFLabel  (1,TFT_COL_X(0), TFT_ROW_Y(0), F("Setup Menu"),WHTITLE);
-    OnScreen->NewWFLabel  (2,TFT_COL_X(0), TFT_ROW_Y(1), F("Add RTode"), WHADDRNODE);
+    OnScreen->NewWFLabel  (0,TFT_COL_X(0), TFT_ROW_Y(1), F("Add RTode"));
+    OnScreen->NewWNumVal  (2,TFT_COL_X(10), TFT_ROW_Y(1), TUINT+THEX+TSETPD, WHADDRNODE);
     OnScreen->NewWFLabel  (3,TFT_COL_X(0), TFT_ROW_Y(2), F("Del RTode"), WHDELRNODE);
     OnScreen->NewWFLabel  (4,TFT_COL_X(0), TFT_ROW_Y(3), F("Tode Setup"), WHTODESETUP);
     OnScreen->NewWFLabel  (5,TFT_COL_X(0), TFT_ROW_Y(4), F("Add Dev"),   WHADDDEV);
@@ -251,3 +252,5 @@ uint8_t DitsUI::AddDevice(uint8_t NavKey) {
     if(SelectedWH==WHACTIVE) {Add_Active=OnScreen->SelectedWValue();}
   }
 }
+//------------------------------------------------------------------------------------------------
+// When Launching a New Screen discard return.  Example: SetupMenu(NAVDISPLAY); return NAVKEYNONE;
