@@ -6,23 +6,25 @@
 #include "DigKeyPadBD241S.h"
 #include <TGTEbyte.h>
 
+#define RFSERIAL Serial1
+//#define RELAYNODE           // On Compile: Comment out for Handheld.  Leave for Node connected to Relays.
 
 //UI
 Adafruit_ST7735 oDSP(/*cs*/6,/*dc*/7,/*rst*/5); //TFT(cs, dc(rs)(cd), rst)
 KeyPad* ButtonCapture = nullptr;
 DitsUI dUI;
 LDevices LDevs;                     // Local Devices Container
-DITImplement DITS(Serial1, LDevs);  // RF-DITS Engine Implementation
-TGTEbyte oEbyte(Serial1,/*M0*/9,/*M1*/8,/*AUX*/50);
+DITImplement DITS(RFSERIAL, LDevs);  // RF-DITS Engine Implementation
+TGTEbyte oEbyte(RFSERIAL,/*M0*/9,/*M1*/8,/*AUX*/50);
 uint32_t msTimer = 0;
 int iTestStep = 0;
 uint8_t NavKey = 0;
 char* tmpname; // General use array for DIT get Names
-
+uint8_t R1devUID = 0xFF, R2devUID = 0xFF, R3devUID = 0xFF, R4devUID = 0xFF;
 //-------------------------------------
 // Debug Displays to track Test Steps
 //-------------------------------------
-void DumpDITSDITS() {
+void DumpDITS() {
   Serial.println(F("\nnvvvvvvvvvvvvvvvvvvvvvvvvvv RADIO1 DITS vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"));
   // Step 1: Iterate through Nodes
   DITSEngine::NodeDIT node = DITS.Node();
@@ -45,7 +47,7 @@ void DumpDITSDITS() {
 }
 
 void setup() {
-  Serial1.begin(9600);        // Start Radio Communications for DITS
+  RFSERIAL.begin(9600);        // Start Radio Communications for DITS
   Serial.begin(115200);
   Serial.println(F("DitsUI Test"));
   tmpname = new char[DITS.DITNameChar];
@@ -70,26 +72,32 @@ void setup() {
   DITS.RadioPktMaxBytes(58);          // 58 is the default.  This can be deleted.
   DITS.RxExpireMS(500);               // 30s is the default.  We keep small for wired-comm.
   DITS.UpdateThisNodeName("DITS");  // Make sure this node has a readable name.
-  DITS.UpdateThisNodeRFAddr(0x0001);  // Make sure DITS has the correct RF Address on record.
   DITS.SecNetCode(0);                 // Assign the 'User' network security code.
 
-  // Add some local devices to DITS
-  uint8_t R1devUID = DITS.AddThisNodeDevice(DT_ONOFF, DRW, "Relay1");
-  DBSAINFO((R1devUID),("DITS.AddThisNodeDevice(DT_ONOFF, DRW, Relay1)=(devUID)\n"))
-  uint8_t R2devUID = DITS.AddThisNodeDevice(DT_ONOFF, DRW, "Relay2");
-  DBSAINFO((R2devUID),("DITS.AddThisNodeDevice(DT_ONOFF, DRW, Relay2)=(devUID)\n"))
-  uint8_t R3devUID = DITS.AddThisNodeDevice(DT_ONOFF, DRW, "Relay3");
-  DBSAINFO((R3devUID),("DITS.AddThisNodeDevice(DT_ONOFF, DRW, Relay3)=(devUID)\n"))
-  uint8_t R4devUID = DITS.AddThisNodeDevice(DT_ONOFF, DRW, "Relay4");
-  DBSAINFO((R4devUID),("DITS.AddThisNodeDevice(DT_ONOFF, DRW, Relay4)=(devUID)\n"))
+  #if defined(RELAYNODE)
+    DITS.UpdateThisNodeName("Relays");  // Make sure this node has a readable name.
+    DITS.UpdateThisNodeRFAddr(0x0001);  // Make sure DITS has the correct RF Address on record.
+    // Add some local devices to DITS
+    R1devUID = DITS.AddThisNodeDevice(DT_ONOFF, DRW, "Relay1");
+    DBSAINFO((R1devUID),("DITS.AddThisNodeDevice(DT_ONOFF, DRW, Relay1)=(devUID)\n"))
+    R2devUID = DITS.AddThisNodeDevice(DT_ONOFF, DRW, "Relay2");
+    DBSAINFO((R2devUID),("DITS.AddThisNodeDevice(DT_ONOFF, DRW, Relay2)=(devUID)\n"))
+    R3devUID = DITS.AddThisNodeDevice(DT_ONOFF, DRW, "Relay3");
+    DBSAINFO((R3devUID),("DITS.AddThisNodeDevice(DT_ONOFF, DRW, Relay3)=(devUID)\n"))
+    R4devUID = DITS.AddThisNodeDevice(DT_ONOFF, DRW, "Relay4");
+    DBSAINFO((R4devUID),("DITS.AddThisNodeDevice(DT_ONOFF, DRW, Relay4)=(devUID)\n"))
   
-  // Assign local device settings
-  //NewOnOffDevice(uint8_t _devUID, uint8_t Pin, uint8_t _pnMode)
-  LDevs.NewOnOffDevice(R1devUID, 20, OUTPUT, true);
-  LDevs.NewOnOffDevice(R2devUID, 21, OUTPUT, true);
-  LDevs.NewOnOffDevice(R3devUID, 22, OUTPUT, true);
-  LDevs.NewOnOffDevice(R4devUID, 23, OUTPUT, true);
-  
+    // Assign local device settings
+    //NewOnOffDevice(uint8_t _devUID, uint8_t Pin, uint8_t _pnMode)
+    LDevs.NewOnOffDevice(R1devUID, 20, OUTPUT, true);
+    LDevs.NewOnOffDevice(R2devUID, 21, OUTPUT, true);
+    LDevs.NewOnOffDevice(R3devUID, 22, OUTPUT, true);
+    LDevs.NewOnOffDevice(R4devUID, 23, OUTPUT, true);
+  #else
+    DITS.UpdateThisNodeName("Handheld");
+    DITS.UpdateThisNodeRFAddr(0x0002);  // Make sure DITS has the correct RF Address on record.
+    DITS.TxAddRemoteNode(0x0001);
+  #endif
   // Start DitsUI
   dUI.Begin(DITS, oDSP, oEbyte);
 }
@@ -118,11 +126,50 @@ void loop() {
       dUI.AdddevUID = BNONE; dUI.Add_devType = BNONE;
     }
     if(NavKey==NAVSETVAL) {
-      if(dUI.OnScreen->NScrIdx==NSTHISNODE) {
+      uint16_t ScrIdx = dUI.OnScreen->NScrIdx;
+      uint16_t WHdevUID = dUI.OnScreen->SelectedWHandleUID();
+      uint16_t WValue = dUI.OnScreen->SelectedWValue();
+      if(ScrIdx==NSTHISNODE) {
         // A Device was Set on This Node.
         uint16_t WHdevUID = dUI.OnScreen->SelectedWHandleUID();
         LDevs.Value(WHdevUID,dUI.OnScreen->SelectedWValue());
+      } else if (ScrIdx<=NSNODEMAX) {
+        uint8_t NodeIndex = ScrIdx & 0xFF;
+        DITS.TxSetRemoteDevVal(NodeIndex, WHdevUID, WValue);
       }
     }
   } // End Button NavKey.
+  /*
+  // Test.
+  #if !defined(RELAYNODE)
+    if (millis()-msTimer >= 2000) { 
+      msTimer=millis(); iTestStep++;
+      if (iTestStep==1) { DumpDITS(); } // Before anything.
+      if (iTestStep==2) {DITS.TxAddRemoteNode(0x0001);}
+      if (iTestStep==3) { DumpDITS(); } // Before anything.
+      // After getting RELAYNODE DIT Records; store its devUID(s) for access
+      if (iTestStep==4) {
+        DITSEngine::NodeDIT node = DITS.Node();
+        while(node.Next()) {
+          if(node.NRFAddr()==0x0001) {
+            uint8_t devCnt = 0;
+            DITSEngine::DeviceDIT dev = DITS.Device();
+            while (dev.Next(node.NodeIdx())) {
+              switch(devCnt) {
+                case 0: R1devUID = dev.DevUID(); break;
+                case 1: R2devUID = dev.DevUID(); break;
+                case 2: R3devUID = dev.DevUID(); break;
+                case 3: R4devUID = dev.DevUID(); break;
+              }
+              devCnt++;
+            }
+          }
+        }
+      }
+      if (iTestStep==5) {DITS.TxSetRemoteDevVal(0x0001, R1devUID, 1);}
+      if (iTestStep==6) {DITS.TxSetRemoteDevVal(0x0001, R1devUID, 0);}
+      if (iTestStep >= 10) iTestStep=0;
+    }
+  #endif
+  */
 }
