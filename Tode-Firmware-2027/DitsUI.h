@@ -33,7 +33,7 @@
 #define NSTHISNODE  0x0000
 #define NSNODEMAX   0x09FF   // Sub-Screen 9 of NodeIdx 255(FF).
 
-// Nav Screens Identity
+// Nav Screens (NScrIdx) Identity
 #define NSNODE       0x0A01
 #define NSSETUP      0x0A03
 #define NSTODESETUP  0x0A04
@@ -50,23 +50,23 @@
 #define WHRADIOID       0x0A04
 #define WHNETID         0x0A05
 #define WHRFADDR        0x0A06
-
+#define WHRFFREQ        0x0A07
 // Setup Screen Widget Handles
-#define WHADDRNODE    0x0A07
-#define WHDELRNODE    0x0A08
-#define WHTODESETUP   0x0A09
-#define WHADDDEV      0x0A0A
-#define WHDELDEV      0x0A0B
-#define WHEDITDEV     0x0A0C
-#define WHSYSTEM      0x0A0D
+#define WHADDRNODE    0x0B07
+#define WHDELRNODE    0x0B08
+#define WHTODESETUP   0x0B09
+#define WHADDDEV      0x0B0A
+#define WHDELDEV      0x0B0B
+#define WHEDITDEV     0x0B0C
+#define WHSYSTEM      0x0B0D
 
 // Add Device Widget Handlers
-#define WHDEVNAME     0x0A0E
-#define WHDEVTYPE     0x0A0F
-#define WHIOPIN       0x0A10
-#define WHPINMODE     0x0A11
-#define WHACTIVE      0x0A12
-#define WHADDBTN      0x0A13
+#define WHDEVNAME     0x0C0E
+#define WHDEVTYPE     0x0C0F
+#define WHIOPIN       0x0C10
+#define WHPINMODE     0x0C11
+#define WHACTIVE      0x0C12
+#define WHADDBTN      0x0C13
 
 // 0x[E]- Event Drivers ... Key Presses Reserved in UIBase/Config.h
 #define NAVDISPLAY    0xED  

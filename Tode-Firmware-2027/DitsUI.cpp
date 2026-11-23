@@ -34,6 +34,8 @@ uint8_t DitsUI::ScreenNavigate(uint8_t _Button) {
   return NavKey;
 }
 //------------------------------------------------------------------------------------------------
+// Node Screen
+//------------------------------------------------------------------------------------------------
 // When Launching a New Screen discard return.  Example: SetupMenu(NAVDISPLAY); return NAVKEYNONE;
 uint8_t DitsUI::NodeScreen(uint8_t NavKey, uint16_t NodeIdx) {
   DBUIAAENTER((NavKey,HEX),(NodeIdx),("DitsUI::NodeScreen(NavKey,NodeIdx)\n"))
@@ -94,6 +96,8 @@ uint8_t DitsUI::NodeScreen(uint8_t NavKey, uint16_t NodeIdx) {
   return NavKey;
 }
 //------------------------------------------------------------------------------------------------
+// Setup Menu
+//------------------------------------------------------------------------------------------------
 uint8_t DitsUI::SetupMenu(uint8_t NavKey) {
   DBUIAENTER((NavKey,HEX),("DitsUI::SetupMenu(NavKey)\n"))
   
@@ -128,6 +132,8 @@ uint8_t DitsUI::SetupMenu(uint8_t NavKey) {
   return NavKey;
 }
 //------------------------------------------------------------------------------------------------
+// Tode Setup with Radio
+//------------------------------------------------------------------------------------------------
 uint8_t DitsUI::TodeSetup(uint8_t NavKey) {
   DBUIAENTER((NavKey,HEX),("DitsUI::TodeSetup(NavKey)\n"))
   uint16_t SelectedWH = OnScreen->SelectedWHandleUID();
@@ -149,6 +155,8 @@ uint8_t DitsUI::TodeSetup(uint8_t NavKey) {
     OnScreen->NewWNumVal  (4,TFT_COL_X(6), TFT_ROW_Y(4), TUINT+THEX+TSETPD, WHNETID);
     OnScreen->NewWFLabel  (0,TFT_COL_X(0), TFT_ROW_Y(5), F("RFAddr:"));
     OnScreen->NewWNumVal  (5,TFT_COL_X(7), TFT_ROW_Y(5), TUINT+THEX+TSETPD, WHRFADDR);
+    OnScreen->NewWFLabel  (0,TFT_COL_X(0), TFT_ROW_Y(6), F("Freq:"));
+    OnScreen->NewWNumVal  (6,TFT_COL_X(7), TFT_ROW_Y(6), TUINT+TDEC+TSETPD, WHRFFREQ);
 
     OnScreen->AddEnum(WHRADIOID,0,F("NOTGOT"));
     OnScreen->AddEnum(WHRADIOID,1,F("UNKNOWN"));
@@ -166,6 +174,7 @@ uint8_t DitsUI::TodeSetup(uint8_t NavKey) {
     if(SelectedWH==WHSECNET)   { pDits->SecNetCode(OnScreen->SelectedWValue()); }
     if(SelectedWH==WHNETID)    { pEbyte->NetID(OnScreen->SelectedWValue()); }
     if(SelectedWH==WHRFADDR)   { pEbyte->Address(OnScreen->SelectedWValue()); }
+    if(SelectedWH==WHRFFREQ)   { pEbyte->Frequency(OnScreen->SelectedWValue()); }
     NavKey=NAVGETSETVAL;
   }
   if(NavKey==NAVGETVALS || NavKey==NAVGETSETVAL) {
@@ -178,6 +187,7 @@ uint8_t DitsUI::TodeSetup(uint8_t NavKey) {
     if(SelectedWH==WHRADIOID||bAll)  { OnScreen->gotValue(NSTODESETUP, WHRADIOID, pEbyte->RadioID()); }
     if(SelectedWH==WHNETID||bAll)    { OnScreen->gotValue(NSTODESETUP, WHNETID, pEbyte->NetID()); }
     if(SelectedWH==WHRFADDR||bAll)   { OnScreen->gotValue(NSTODESETUP, WHRFADDR, pEbyte->Address()); }
+    if(SelectedWH==WHRFFREQ||bAll)   { OnScreen->gotValue(NSTODESETUP, WHRFFREQ, pEbyte->Frequency()); }
     return NAVKEYNONE;
   }
   return NavKey;

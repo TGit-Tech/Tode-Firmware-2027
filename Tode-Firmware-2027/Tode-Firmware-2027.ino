@@ -6,7 +6,7 @@
 #include "DigKeyPadBD241S.h"
 #include <TGTEbyte.h>
 
-#define RFSERIAL Serial1      // Tode 'Serial1' JMP-wire, BD241S 'Serial3' Ebyte
+#define RFSERIAL Serial3      // Tode 'Serial1' JMP-wire (Also Line#92 in DITImplement.h), BD241S 'Serial3' Ebyte
 //#define RELAYNODE           // On Compile: Comment out for Handheld.  Leave for Node connected to Relays.
 
 //UI
@@ -76,7 +76,7 @@ void setup() {
 
   #if defined(RELAYNODE)
     DITS.UpdateThisNodeName("Relays");  // Make sure this node has a readable name.
-    DITS.UpdateThisNodeRFAddr(0x0001);  // Make sure DITS has the correct RF Address on record.
+    //DITS.UpdateThisNodeRFAddr(0x0001);  // Make sure DITS has the correct RF Address on record. DON'T USE WITH RADIO
     // Add some local devices to DITS
     R1devUID = DITS.AddThisNodeDevice(DT_ONOFF, DRW, "Relay1");
     DBSAINFO((R1devUID),("DITS.AddThisNodeDevice(DT_ONOFF, DRW, Relay1)=(devUID)\n"))
@@ -95,11 +95,16 @@ void setup() {
     LDevs.NewOnOffDevice(R4devUID, 23, OUTPUT, true);
   #else
     DITS.UpdateThisNodeName("Handheld");
-    DITS.UpdateThisNodeRFAddr(0x0002);  // Make sure DITS has the correct RF Address on record.
+    //DITS.UpdateThisNodeRFAddr(0x0002);  // Make sure DITS has the correct RF Address on record. DON'T USE WITH RADIO
     //DITS.TxAddRemoteNode(0x0001);
   #endif
   // Start DitsUI
   dUI.Begin(DITS, oDSP, oEbyte);
+  if(!oEbyte.FixedTransmission()) oEbyte.FixedTransmission(true);
+  oEbyte.AirSpeed(2);
+  DITS.setRadioChannel(oEbyte.Channel());
+  oEbyte.Mode(ERFNORMMODE);
+  DITS.UpdateThisNodeRFAddr(oEbyte.Address());
 }
 
 void loop() {

@@ -56,13 +56,17 @@ class DITImplement : public DITSEngine {
         LDev.LoadDevice(dev.DevUID(),dev.DevType()); 
       }
     }
-
+    void setRadioChannel(uint8_t _RadioChannel) {RadioChannel=_RadioChannel;}
     // Remote Device Values Buffer
     uint8_t RNodeIdx = 0;
     void RdevValReset() { RNodeIdx=0; for(uint8_t i=0; i<MAXREMVALS; i++){RdevUID[i]=0;RdevVal[i]=0;} }
 
     uint8_t ProcLoop() {
-      while (SPort.available()>0) {this->RxData(SPort.read());} // Serial Bytes to RF-Dits
+      while (SPort.available()>0) {
+        uint8_t Rx_byte = SPort.read();
+        DBLAINFO((Rx_byte,HEX),("Rx "));
+        this->RxData(Rx_byte);
+      } // Serial Bytes to RF-Dits
       this->ProcessLoop();                                      // RF-DITS Process Loop
       LDev.LDevProcLoop();                                     // LDevProc Loop
       return (Rdevidx!=0) ? RDEVLOADED : BNONE;                 // Return if Remote Values are Loaded
@@ -87,8 +91,13 @@ class DITImplement : public DITSEngine {
       RdevVal[Rdevidx] = value;
       Rdevidx++;
     }
-    virtual bool TxReady(uint16_t _ToRFAddr) override { return (SPort.availableForWrite()>58); }
-    virtual void TxData(byte _TxByte) override { SPort.write(_TxByte); }
+    virtual bool TxReady(uint16_t _ToRFAddr) override {
+      if(SPort.availableForWrite()<58) return false;
+      DBLAAINFO((_ToRFAddr,HEX),(RadioChannel),("TxReady(ToRFAddr,RadioChannel)"))
+      SPort.write(highByte(_ToRFAddr));SPort.write(lowByte(_ToRFAddr));SPort.write(RadioChannel); // Comment out for Jumper Test (Radio Only)
+      return true;
+    }
+    virtual void TxData(byte _TxByte) override { DBLINFOSP((_TxByte,HEX)) SPort.write(_TxByte); }
     virtual byte pmem_read(int addr) override { return PMEMREAD(addr); }
     virtual void pmem_write(int addr, byte val) override { PMEMWRITE(addr, val); }
   private:
@@ -101,4 +110,5 @@ class DITImplement : public DITSEngine {
     uint16_t RdevVal[MAXREMVALS] = {0};
     uint8_t Rdevidx = 0;
     char* tmpname; // General use array for DIT get Names
+    uint8_t RadioChannel = 0;
 };

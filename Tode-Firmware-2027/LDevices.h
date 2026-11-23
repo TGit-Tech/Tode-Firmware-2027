@@ -53,7 +53,7 @@ public:
   uint16_t Value() override {
     bool ActLo = (Pin2Mode()==ACTIVELOWON);
     bool val = digitalRead(Pin1());
-    DBHAAINFO((Pin1()),(val),("OnOff::Value[GET] digitalRead(Pin)=(val)\n"))
+    //DBHAAINFO((Pin1()),(val),("OnOff::Value[GET] digitalRead(Pin)=(val)\n"))
     val = (ActLo) ? !val : val;
     return val;
   }
@@ -62,7 +62,7 @@ public:
     bool val = (_Value != 0); val = (ActLo) ? !val : val;
     if(Pin1Mode()==INPUT || Pin1Mode()==INPUT_PULLUP) { return false; } else { pinMode(Pin1(),Pin1Mode()); }
     digitalWrite(Pin1(),val); 
-    DBHAAINFO((Pin1()),(val),("OnOff::Value[SET] digitalWrite(Pin,val)\n"))
+    //DBHAAINFO((Pin1()),(val),("OnOff::Value[SET] digitalWrite(Pin,val)\n"))
     return true;
   }
 };
