@@ -40,39 +40,39 @@
 #define NSADDDEV     0x0A06
 
 // Multi-Use Widget Handles
-#define WHTITLE         0x0A00
+//#define WHTITLE         0x0A00
 #define WHTITLENN       0x0A01    // Screen Title Node Name
 
 // Node Edit Widget Handles
-#define WHNODENAME      0x0A02
-#define WHSECNET        0x0A03
-#define WHRADIOID       0x0A04
-#define WHNETID         0x0A05
-#define WHRFADDR        0x0A06
-#define WHRFFREQ        0x0A07
+#define WHNODENAME      0xDA02    // D for Widget
+#define WHSECNET        0xDA03
+#define WHRADIOID       0xDA04
+#define WHNETID         0xDA05
+#define WHRFADDR        0xDA06
+#define WHRFFREQ        0xDA07
 
 // Setup Screen Widget Handles
-#define WHADDRNODE    0x0B07
-#define WHDELRNODE    0x0B08
-#define WHTODESETUP   0x0B09
-#define WHADDDEV      0x0B0A
-#define WHDELDEV      0x0B0B
-#define WHEDITDEV     0x0B0C
-#define WHSYSTEM      0x0B0D
+#define WHADDRNODE    0xDB07
+#define WHDELRNODE    0xDB08
+#define WHTODESETUP   0xDB09
+#define WHADDDEV      0xDB0A
+#define WHDELDEV      0xDB0B
+#define WHEDITDEV     0xDB0C
+#define WHSYSTEM      0xDB0D
 
 // Add Device Widget Handlers
-#define WHDEVNAME     0x0C0E
-#define WHDEVTYPE     0x0C0F
-#define WHIOPIN       0x0C10
-#define WHPINMODE     0x0C11
-#define WHACTIVE      0x0C12
-#define WHADDBTN      0x0C13
+#define WHDEVNAME     0xDC0E
+#define WHDEVTYPE     0xDC0F
+#define WHIOPIN       0xDC10
+#define WHPINMODE     0xDC11
+#define WHACTIVE      0xDC12
+#define WHADDBTN      0xDC13
 
 // 0x[E]- Event Drivers ... Key Presses Reserved in UIBase/Config.h
-#define NAVDISPLAY    0xED  
-#define NAVGETVALS    0xEC
-#define NAVGETSETVAL  0xEB    // Only Used to verify a SETVAL
-#define NAVNEWDEVICE  0xEA
+#define NAVDISPLAY    0xCD  // C for Command
+#define NAVGETVALS    0xCC
+#define NAVGETSETVAL  0xCB    // Only Used to verify a SETVAL
+#define NAVNEWDEVICE  0xCA
 //-------------------------------------------------------------------------
 // Defined in TGTWidgetsConfig.h
 //-------------------------------------------------------------------------
