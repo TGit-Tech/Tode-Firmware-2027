@@ -12,7 +12,7 @@
 //#define BUZZER
 #include <Arduino.h>
 #include <TGTDB.h>
-#include <TGTWidgetsConfig.h>
+#include <TGTWidgets.h>
 
 //#####################################################################################################
 namespace ButtonISR {

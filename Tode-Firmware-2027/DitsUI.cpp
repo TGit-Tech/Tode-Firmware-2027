@@ -55,7 +55,7 @@ uint8_t DitsUI::NodeScreen(uint8_t NavKey, uint16_t NodeIdx) {
       SetupMenu(NAVDISPLAY); return NAVKEYNONE;
     }
   }
-
+  //'''''''''' NAVDISPLAY
   if(NavKey==NAVDISPLAY) {
     delete OnScreen; OnScreen = nullptr; int row = 0;
     OnScreen = new TGTScreen(*pGFX,node.NodeIdx());
@@ -93,6 +93,21 @@ uint8_t DitsUI::NodeScreen(uint8_t NavKey, uint16_t NodeIdx) {
     }
     return NAVKEYNONE;
   }
+  /*
+  if(NavKey==NAVGETVALS || NavKey==NAVGETSETVAL) {
+    bool bAll = (NavKey==NAVGETVALS);
+    if(SelectedWH==WHNODENAME||bAll) {
+      DITSEngine::NodeDIT node = pDits->Node(0); node.NGetName(tmpDITName);
+      OnScreen->gotValue(NSTODESETUP, WHNODENAME, tmpDITName);
+    }
+    if(SelectedWH==WHSECNET||bAll)   { OnScreen->gotValue(NSTODESETUP, WHSECNET, pDits->SecNetCode()); }
+    if(SelectedWH==WHRADIOID||bAll)  { OnScreen->gotValue(NSTODESETUP, WHRADIOID, pEbyte->RadioID()); }
+    if(SelectedWH==WHNETID||bAll)    { OnScreen->gotValue(NSTODESETUP, WHNETID, pEbyte->NetID()); }
+    if(SelectedWH==WHRFADDR||bAll)   { OnScreen->gotValue(NSTODESETUP, WHRFADDR, pEbyte->Address()); }
+    if(SelectedWH==WHRFFREQ||bAll)   { OnScreen->gotValue(NSTODESETUP, WHRFFREQ, pEbyte->Frequency()); }
+    return NAVKEYNONE;
+  }
+  */
   return NavKey;
 }
 //------------------------------------------------------------------------------------------------

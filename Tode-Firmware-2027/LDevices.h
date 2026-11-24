@@ -14,7 +14,19 @@
 #include "Config.h"
 #include "SETGS.h"        // EEPROM Local Device Settings via BitFields
 
-#define MAXDEVICES 35
+constexpr uint8_t DT_NOTSET =       0x7F;
+constexpr uint8_t DT_ONOFF =        0x7E;    ///< On/Off Switching Device
+constexpr uint8_t DT_DIST =         0x7A;    ///< Distance Sensing Device
+constexpr uint8_t DT_STSTP3W =      0x79;    ///< Start Stop 3-Wire
+constexpr uint8_t DT_ANAINPUT =     0x78;    ///< Analog Device (Pressure, Temperature)
+constexpr uint8_t DT_ANAOUTPUT =    0x77;    ///< Analog Output (PWM control)
+constexpr uint8_t DT_DLSETPOINT =   0x76;    ///< Dev Logic Control Boundary
+constexpr uint8_t DT_DLMATH =       0x75;    ///< Dev Logic Compare / Math Device
+
+constexpr uint8_t ACTIVEHION =      0;
+constexpr uint8_t ACTIVELOWON =     1;    ///< Stored on Pin2Mode.
+
+#define MAXDEVICES 35     // Maximum Local Device pointers
 
 //--------------------------------------------------
 // Local Device Interface for all Devices.

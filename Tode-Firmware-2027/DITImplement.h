@@ -5,12 +5,12 @@
 #pragma once
 
 #include "Config.h"
+#include <TGTDB.h>
 #include <rf_dits.h>        // RF-DITS protocol engine
 #include "LDevices.h"       // LDevices
-#include <TGTDB.h>
 
 #define RAMEEPROM           // Use RAM as EEPROM
-
+//#define UARTJUMP            // Use Rx->Tx Jumper Wire
 // Notice - Changing these will make previous records void
 #define STARTADDR     0
 #define MAXDITRECORDS 40
@@ -30,7 +30,7 @@
 #endif
 
 ///@class   DITImplement
-///@brief   A Serial RF-DITS engine using LDevices* for local device get/set and RNode Values Buffer.
+///@brief   A Serial RF-DITS engine carrying LDev* for local device get/set and RNode Values Buffer.
 ///@details Responsibilities:
 ///     - ProcLoop() calls SPort->RxData, LDevProcLoop() & this->ProcessLoop().
 ///     - Remote Node Values are stored in RNodeIdx, RdevUID[], RdevVal[] alloc to MAXREMVALS
@@ -43,13 +43,17 @@ class DITImplement : public DITSEngine {
     
     DITImplement(HardwareSerial& SerialPort, LDevices& _LDev) 
     : DITSEngine(STARTADDR,MAXDITRECORDS,NAMEBYTES), SPort(SerialPort), LDev(_LDev) {
-    //DITSEngine(uint16_t _pmemBeginAddr, byte _MaxDITRecords, byte _NameFieldBytes);
       #if defined(RAMEEPROM)
         memset(RAM_EEPROM, 0xFF, sizeof(RAM_EEPROM));
       #endif
       tmpname = new char[NAMEBYTES];
     }
     
+    LDevices& LDev;
+    uint8_t RNodeIdx = 0; // Remote Device Values Buffer
+    uint8_t RdevUID[MAXREMVALS] = {0};
+    uint16_t RdevVal[MAXREMVALS] = {0};
+
     void LoadDevices() {
       DITSEngine::DeviceDIT dev = this->Device();
       while (dev.Next(0)) { 
@@ -57,19 +61,17 @@ class DITImplement : public DITSEngine {
       }
     }
     void setRadioChannel(uint8_t _RadioChannel) {RadioChannel=_RadioChannel;}
-    // Remote Device Values Buffer
-    uint8_t RNodeIdx = 0;
     void RdevValReset() { RNodeIdx=0; for(uint8_t i=0; i<MAXREMVALS; i++){RdevUID[i]=0;RdevVal[i]=0;} }
 
     uint8_t ProcLoop() {
       while (SPort.available()>0) {
         uint8_t Rx_byte = SPort.read();
-        DBLAINFO((Rx_byte,HEX),("Rx "));
+        //DBLAINFO((Rx_byte,HEX),("Rx "));
         this->RxData(Rx_byte);
       } // Serial Bytes to RF-Dits
-      this->ProcessLoop();                                      // RF-DITS Process Loop
+      this->ProcessLoop();                                     // RF-DITS Process Loop
       LDev.LDevProcLoop();                                     // LDevProc Loop
-      return (Rdevidx!=0) ? RDEVLOADED : BNONE;                 // Return if Remote Values are Loaded
+      return (Rdevidx!=0) ? RDEVLOADED : BNONE;                // Return if Remote Values are Loaded
     }
   protected:
     virtual int RxReqDeviceValue(byte _DevUID) override { 
@@ -94,21 +96,22 @@ class DITImplement : public DITSEngine {
     virtual bool TxReady(uint16_t _ToRFAddr) override {
       if(SPort.availableForWrite()<58) return false;
       DBLAAINFO((_ToRFAddr,HEX),(RadioChannel),("TxReady(ToRFAddr,RadioChannel)"))
-      SPort.write(highByte(_ToRFAddr));SPort.write(lowByte(_ToRFAddr));SPort.write(RadioChannel); // Comment out for Jumper Test (Radio Only)
+      #if !defined(UARTJUMP)
+        SPort.write(highByte(_ToRFAddr)); // Ebyte Radio Only ToRF Header
+        SPort.write(lowByte(_ToRFAddr));
+        SPort.write(RadioChannel);
+      #endif
       return true;
     }
-    virtual void TxData(byte _TxByte) override { DBLINFOSP((_TxByte,HEX)) SPort.write(_TxByte); }
+    virtual void TxData(byte _TxByte) override { SPort.write(_TxByte); }
     virtual byte pmem_read(int addr) override { return PMEMREAD(addr); }
     virtual void pmem_write(int addr, byte val) override { PMEMWRITE(addr, val); }
   private:
     HardwareSerial& SPort;
-    LDevices& LDev;
     #if defined(RAMEEPROM)
       byte RAM_EEPROM[0x0300];
     #endif
-    uint8_t RdevUID[MAXREMVALS] = {0};
-    uint16_t RdevVal[MAXREMVALS] = {0};
     uint8_t Rdevidx = 0;
-    char* tmpname; // General use array for DIT get Names
-    uint8_t RadioChannel = 0;
+    char* tmpname;                // General use array for DIT get Names
+    uint8_t RadioChannel = 0;     // Radio Channel required on TxReady() Ebyte Radio Headers
 };

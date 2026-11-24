@@ -1,16 +1,14 @@
 ///@file    DitsUI.h
-///@brief   TFT & Keypad user interface (UI) for RF-DITS protocol.
+///@brief   TFT & Keypad user interface (UI) for RF-DITS protocol on Tode.
 #pragma once
 
 #include "Config.h"
 #include <Arduino.h>
-#include <rf_dits.h>
+#include "DITImplement.h"
 #include <Adafruit_ST7735.h>
 #include <OneSlot9pt7b.h>
 #include <TGTEbyte.h>
 #include <TGTWidgets.h>     // Setup Base Class
-#include "SETGS.h"
-//#include "LDeviceI.h"
 
 /* Defined in TGTWidgets Library
 // WNumVal DataTypes
@@ -22,10 +20,11 @@
 #define TNOSET    0b00000000  // Not settable     0b00xx xxxx
 #define TSET      0b01000000  // Settable         0b01xx xxxx
 #define TSETPD    0b11000000  // Settable, per digit 0b11xx xxxx
-*/
+// Defined in SETGS.h through DITImplement through LDevices
 #define BNONE     0xFF    ///< Byte NONE/UNSET
 #define INONE     0xFFFF  ///< Integer NONE/UNSET
 #define SINONE    0x8000  ///< Signed Integer NONE/UNSET
+*/
 
 // UI Navigation Screens & Navigation Commands
 // Nav Screens Dynamic
@@ -51,6 +50,7 @@
 #define WHNETID         0x0A05
 #define WHRFADDR        0x0A06
 #define WHRFFREQ        0x0A07
+
 // Setup Screen Widget Handles
 #define WHADDRNODE    0x0B07
 #define WHDELRNODE    0x0B08
@@ -74,6 +74,8 @@
 #define NAVGETSETVAL  0xEB    // Only Used to verify a SETVAL
 #define NAVNEWDEVICE  0xEA
 //-------------------------------------------------------------------------
+// Defined in TGTWidgetsConfig.h
+//-------------------------------------------------------------------------
 #ifndef NSNONE
   #define NSNONE      0xFFFF  // Should be defined in TGTWidgetsConfig.h
 #endif
@@ -84,30 +86,7 @@
 //#define NAVSTAGEVAL   0xEF  // Used in UIBase.h
 //#define NAVSETVAL     0xEE  // Used in UIBase.h
 //#define NSNONE        0xFFFF  // Used in UIBase.h
-/*
-    OnScreen->NewWCharVal (2,TFT_COL_X(5), TFT_ROW_Y(1), pDits->DITNameChar, true, WHDEVNAME); //tmpDITName
-    memset(tmpDITName, 0, pDits->DITNameChar);
-    OnScreen->gotValue(NSTODESETUP, WHDEVNAME, tmpDITName);
-*/    
-/*
-///@defgroup DT [DT] Device-Type enumeration.
-/// DITS provides 1-byte to designate Device Type definitions.
-/// Never (0) as RF uses null-termination '\0' to seperate records.
-/// Prevent usage of (0xF?) packet types as they help signal beginning of packets.
-///@{
-// 0x[7] Device Types
-#define DT_NOTSET       0x7F
-#define DT_ONOFF        0x7E    ///< On/Off Switching Device
-#define DT_DIST         0x7A    ///< Distance Sensing Device
-#define DT_STSTP3W      0x79    ///< Start Stop 3-Wire
-#define DT_ANAINPUT     0x78    ///< Analog Device (Pressure, Temperature)
-#define DT_ANAOUTPUT    0x77    ///< Analog Output (PWM control)
-#define DT_DLSETPOINT   0x76    ///< Dev Logic Control Boundary
-#define DT_DLMATH       0x75    ///< Dev Logic Compare / Math Device
-
-#define DT_MINBOUNDARY  0x75    ///< MINIMUM BOUNDARY CHECK FOR ADD DEVICE KEYS
-///@}
-*/
+//-------------------------------------------------------------------------
 class DitsUI
 {
 public:

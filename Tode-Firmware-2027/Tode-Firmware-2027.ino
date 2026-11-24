@@ -139,9 +139,11 @@ void loop() {
         uint16_t WHdevUID = dUI.OnScreen->SelectedWHandleUID();
         LDevs.Value(WHdevUID,dUI.OnScreen->SelectedWValue());
       } else if (ScrIdx<=NSNODEMAX) {
+        // A Device was Set on a Remote Node.
         uint8_t NodeIndex = ScrIdx & 0xFF;
         DITS.TxSetRemoteDevVal(NodeIndex, WHdevUID, WValue);
       } else if (ScrIdx==NSSETUP) {
+        // Add Remote Node
         if(WHdevUID==WHADDRNODE) { DITS.TxAddRemoteNode(WValue); }
       }
     }
