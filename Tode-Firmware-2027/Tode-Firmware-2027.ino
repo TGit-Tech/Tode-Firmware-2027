@@ -3,7 +3,7 @@
 #include "LDevices.h"
 #include "DitsUI.h"
 #include <Adafruit_ST7735.h>
-#include "DigKeyPadBD241S.h"
+#include <DigKeyPadBD241S.h>
 #include <TGTEbyte.h>
 
 #define RFSERIAL Serial3      // Tode 'Serial1' JMP-wire (Also Line#92 in DITImplement.h), BD241S 'Serial3' Ebyte
@@ -12,10 +12,12 @@
 //UI
 Adafruit_ST7735 oDSP(/*cs*/6,/*dc*/7,/*rst*/5); //TFT(cs, dc(rs)(cd), rst)
 KeyPad* ButtonCapture = nullptr;
-DitsUI dUI;
+//DitsUI(Adafruit_GFX& _GFX, DITSEngine& _Dits, TGTEbyte& _Ebyte)
 LDevices LDevs;                     // Local Devices Container
 DITImplement DITS(RFSERIAL, LDevs);  // RF-DITS Engine Implementation
 TGTEbyte oEbyte(RFSERIAL,/*M0*/9,/*M1*/8,/*AUX*/50);
+
+DitsUI dUI(oDSP,DITS,oEbyte);
 uint32_t msTimer = 0;
 int iTestStep = 0;
 uint8_t NavKey = 0;
@@ -99,7 +101,7 @@ void setup() {
     //DITS.TxAddRemoteNode(0x0001);
   #endif
   // Start DitsUI
-  dUI.Begin(DITS, oDSP, oEbyte);
+  dUI.Begin();
   if(!oEbyte.FixedTransmission()) oEbyte.FixedTransmission(true);
   oEbyte.AirSpeed(2);
   DITS.setRadioChannel(oEbyte.Channel());
@@ -128,7 +130,7 @@ void loop() {
     if(NavKey==NAVNEWDEVICE) {
       //DITS.AddThisNodeDevice()
       //DITS.AddDevice(dUI.AdddevUID, dUI.Add_devType);
-      dUI.AdddevUID = BNONE; dUI.Add_devType = BNONE;
+      //dUI.AdddevUID = BNONE; dUI.Add_devType = BNONE;
     }
     if(NavKey==NAVSETVAL) {
       uint16_t ScrIdx = dUI.OnScreen->NScrIdx;
