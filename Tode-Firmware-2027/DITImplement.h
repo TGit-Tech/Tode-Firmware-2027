@@ -17,8 +17,10 @@
 #define NAMEBYTES     10
 
 #define MAXREMVALS 50
-#define RDEVLOADED 0x01
 
+// ProcLoop Special Return Values
+#define RDEVLOADED 0x01
+#define DITUPDATE  0x02
 //--------------------------------------------------
 #if defined(RAMEEPROM)
   #define PMEMREAD(a) RAM_EEPROM[(a)]
@@ -53,6 +55,8 @@ class DITImplement : public DITSEngine {
     uint8_t RNodeIdx = 0; // Remote Device Values Buffer
     uint8_t RdevUID[MAXREMVALS] = {0};
     uint16_t RdevVal[MAXREMVALS] = {0};
+    uint8_t Rdevidx = 0;                // Loop Check for Remote Dev Values
+    uint8_t DitUpdateOnNode = 0;        // Loop Check for DITUpdates
 
     void LoadDevices() {
       DITSEngine::DeviceDIT dev = this->Device();
@@ -64,14 +68,14 @@ class DITImplement : public DITSEngine {
     void RdevValReset() { RNodeIdx=0; for(uint8_t i=0; i<MAXREMVALS; i++){RdevUID[i]=0;RdevVal[i]=0;} }
 
     uint8_t ProcLoop() {
-      while (SPort.available()>0) {
+      while (SPort.available()>0) {                           // Serial Bytes to RF-Dits RxData
         uint8_t Rx_byte = SPort.read();
         //DBLAINFO((Rx_byte,HEX),("Rx "));
         this->RxData(Rx_byte);
-      } // Serial Bytes to RF-Dits
+      }
       this->ProcessLoop();                                     // RF-DITS Process Loop
       LDev.LDevProcLoop();                                     // LDevProc Loop
-      return (Rdevidx!=0) ? RDEVLOADED : BNONE;                // Return if Remote Values are Loaded
+      return BNONE;                                            // Might make 'void' as Loop Checks done in upper-level
     }
   protected:
     virtual int RxReqDeviceValue(byte _DevUID) override { 
@@ -106,12 +110,16 @@ class DITImplement : public DITSEngine {
     virtual void TxData(byte _TxByte) override { SPort.write(_TxByte); }
     virtual byte pmem_read(int addr) override { return PMEMREAD(addr); }
     virtual void pmem_write(int addr, byte val) override { PMEMWRITE(addr, val); }
+    virtual void RxDITUpdate(byte nodeIdx) override {
+      // Notification that the DIT table for 'nodeIdx' has changed due to received network data
+      DBDBAINFO((nodeIdx),("DITImplement::RxDITUpdate(nodeIdx)\n"))
+      DitUpdateOnNode = nodeIdx;
+    }
   private:
     HardwareSerial& SPort;
     #if defined(RAMEEPROM)
       byte RAM_EEPROM[0x0300];
     #endif
-    uint8_t Rdevidx = 0;
     char* tmpname;                // General use array for DIT get Names
     uint8_t RadioChannel = 0;     // Radio Channel required on TxReady() Ebyte Radio Headers
 };

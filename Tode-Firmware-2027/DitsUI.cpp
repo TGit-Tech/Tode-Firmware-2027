@@ -15,13 +15,21 @@ bool DitsUI::gotValue(uint16_t _NScrIdx, uint16_t _WHandleUID, uint16_t _Value) 
   if(OnScreen->NScrIdx!=_NScrIdx) return false;
   OnScreen->gotValue(_NScrIdx,_WHandleUID,_Value);
 }
+void DitsUI::DitUpdate(uint8_t nodeIdx) {
+  if(OnScreen==nullptr) return;
+  if(OnScreen->NScrIdx==NSSETUP||OnScreen->NScrIdx==nodeIdx) {
+    delete OnScreen; OnScreen=nullptr;
+    OnScreen = new NodeScreen(GFX,nodeIdx,Dits);
+    OnScreen->DisplayScreen();
+  }
+  Dits.DitUpdateOnNode=0;
+}
 //'''''''''''''''''''''''''''''''''''( UI Navigation )''''''''''''''''''''''''''''''''''''''''''''''''''
 // If switching Screens, the navigation belongs here
 uint8_t DitsUI::ScreenNavigate(uint8_t _Button) {
-  DBUIAENTER((_Button,HEX),("DitsUI::ScreenNavigate(_Button)\n"))
   if(OnScreen==nullptr) { DBUIERROR(("DitsUI::ScreenNavigate OnScreen==nullptr\n")) return _Button; }
   uint8_t RtnNavKey = OnScreen->Navigate(_Button);
-  DBUIAINFO((RtnNavKey,HEX),("DitsUI::ScreenNavigate returned(RtnNavKey)\n"))
+  DBUIAAINFO((_Button,HEX),(RtnNavKey,HEX),("DitsUI::ScreenNavigate OnScreen->Navigate(_Button) returned(RtnNavKey)\n"))
 
   // Node Screen Navigation
   if(OnScreen->NScrIdx <= NSNODEMAX) {
@@ -51,13 +59,14 @@ uint8_t DitsUI::ScreenNavigate(uint8_t _Button) {
       if((OnScreen->NScrIdx&NODEIDXMASK) == NSTHISNODE && OnScreen->SelectedWHandleUID()==WHTITLE ) {
         DBUIINFO(("DitsUI::Navigate [<=NSNODEMAX] NAVKEYSET Node->SetupMenu\n"))
         delete OnScreen; OnScreen=nullptr;
-        OnScreen = new SetupMenu(GFX,NSSETUP);
+        OnScreen = new SetupMenu(GFX,NSSETUP,Dits);
         OnScreen->DisplayScreen();
         return NAVKEYNONE;
       }
     }
-
-  // Setup Menu Navigation
+  //-----------------------------------------------------------------------------------------------
+  // NSSETUP Menu Navigation
+  //-----------------------------------------------------------------------------------------------
   } else if(OnScreen->NScrIdx == NSSETUP) { 
     if(RtnNavKey==NAVKEYLEFT) {
       DBUIINFO(("DitsUI::ScreenNavigate [NSSETUP] NAVKEYLEFT SetupMenu->Node\n"))
@@ -68,9 +77,9 @@ uint8_t DitsUI::ScreenNavigate(uint8_t _Button) {
     }   
     if(RtnNavKey==NAVKEYGET) { 
       switch(OnScreen->SelectedWHandleUID()) {
-        case WHADDRNODE: 
+        /*case WHADDRNODE: 
           DBUIINFO(("DitsUI::ScreenNavigate [NSSETUP] NAVKEYLEFT SetupMenu->AddRNode\n"))
-          return NAVKEYNONE;
+          return NAVKEYNONE;*/
         case WHDELRNODE: 
           DBUIINFO(("DitsUI::ScreenNavigate [NSSETUP] NAVKEYLEFT SetupMenu->DelRNode\n"))
           return NAVKEYNONE;
@@ -80,7 +89,7 @@ uint8_t DitsUI::ScreenNavigate(uint8_t _Button) {
           OnScreen = new TodeSetup(GFX,NSTODESETUP,Dits,Ebyte);
           OnScreen->DisplayScreen();
           return NAVKEYNONE;
-        case WHADDDEV:
+        case WHADDONOFF:
           DBUIINFO(("DitsUI::ScreenNavigate [NSSETUP] NAVKEYLEFT SetupMenu->AddDevice\n"))
           delete OnScreen; OnScreen=nullptr;
           OnScreen = new AddDevice(GFX,NSADDDEV,Dits);
@@ -93,7 +102,16 @@ uint8_t DitsUI::ScreenNavigate(uint8_t _Button) {
         case WHSYSTEM: 
           return NAVKEYNONE;
       }
-    }  
+    }
+  // Setup Menu Sub-Screens LEFT Exit->SetupMenu
+  } else if(OnScreen->NScrIdx == NSTODESETUP || OnScreen->NScrIdx == NSADDDEV) {  
+    if(RtnNavKey==NAVKEYLEFT) {
+      DBUIINFO(("DitsUI::ScreenNavigate [NSTODESETUP||NSADDDEV] NAVKEYLEFT ->SetupMenu\n"))
+      delete OnScreen; OnScreen=nullptr;
+      OnScreen = new SetupMenu(GFX,NSSETUP,Dits);
+      OnScreen->DisplayScreen();
+      return NAVKEYNONE;
+    }
   }
   return RtnNavKey;
 }

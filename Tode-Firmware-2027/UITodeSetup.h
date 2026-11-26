@@ -2,19 +2,20 @@
 #include "DITImplement.h"
 #include <TGTEbyte.h>
 
+#define NSTHISNODE  0x0000
 #define NAVNEWDEVICE  0xCA
 #define NAVGETVALS    0xCC
 #define NAVGETSETVAL  0xCB    // Only Used to verify a SETVAL
 
 #define WHTITLE       0x0A00
 // Setup Screen Widget Handles
-#define WHADDRNODE    0xDB07
 #define WHDELRNODE    0xDB08
 #define WHTODESETUP   0xDB09
 #define WHADDDEV      0xDB0A
 #define WHDELDEV      0xDB0B
 #define WHEDITDEV     0xDB0C
 #define WHSYSTEM      0xDB0D
+#define WHADDONOFF    0xDB0E
 
 // Tode Setup Screens (NScrIdx) Identity
 #define NSSETUP      0x0A03
@@ -24,13 +25,16 @@
 //-------------------------------------------------------------------------------------------------
 class SetupMenu : public TGTScreen {
 public:
-  SetupMenu(Adafruit_GFX& _GFX, uint16_t _NScrIdx)
-  : TGTScreen(_GFX,_NScrIdx) {}
+  SetupMenu(Adafruit_GFX& _GFX, uint16_t _NScrIdx, DITImplement& _Dits)
+  : TGTScreen(_GFX,_NScrIdx), Dits(_Dits) 
+  {tmpDITName = new char[Dits.DITNameChar];}
+  ~SetupMenu() { delete[] tmpDITName; }
 
   void DisplayScreen();
   uint8_t Navigate(uint8_t _Button) override;
   
 private:
+  DITImplement& Dits;
   char* tmpDITName; // General use array for DIT get Names
 };
 //-------------------------------------------------------------------------------------------------
@@ -49,6 +53,7 @@ private:
   DITSEngine::NodeDIT node;
   TGTEbyte& Ebyte;
   char* tmpDITName; // General use array for DIT get Names
+  void getValues(bool SelOnly = false);
 };
 //-------------------------------------------------------------------------------------------------
 class AddDevice : public TGTScreen {

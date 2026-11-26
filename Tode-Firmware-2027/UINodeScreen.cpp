@@ -40,7 +40,7 @@ uint8_t NodeScreen::Navigate(uint8_t _Button) {
   DBUIAENTER((RtnNavKey,HEX),("NodeScreen::Navigate (RtnNavKey)\n"))
 
   if(RtnNavKey==NAVSETVAL) {
-    if(node.NodeIdx()==0) {
+    if(NScrIdx==NSTHISNODE) {
       // This Node value Set //Value(uint8_t _devUID, uint16_t _Value)
       Dits.LDev.Value(SelectedWHandleUID(),SelectedWValue());
     } else {
@@ -49,7 +49,8 @@ uint8_t NodeScreen::Navigate(uint8_t _Button) {
     }
   }
   if(RtnNavKey==NAVKEYGET) {
-    if(node.NodeIdx()==0) {
+    if(NScrIdx==NSTHISNODE) {
+      // Local Gets should be in a loop.  Should we do anything?
 
     } else {
       Dits.TxGetRemoteDevVals(node.NodeIdx());

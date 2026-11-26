@@ -110,7 +110,12 @@ void setup() {
 }
 
 void loop() {
-  if(DITS.ProcLoop()==RDEVLOADED) { /*Send Remote Values to UI*/ }
+  uint8_t RtnProcLoop = DITS.ProcLoop();
+  if(DITS.Rdevidx!=0) { /*Send Remote Values to UI*/ }
+  if(DITS.DitUpdateOnNode!=0) { 
+    DBSINFO(("loop() DITS.DitUpdateOnNode!=0"))
+    dUI.DitUpdate(DITS.DitUpdateOnNode); 
+  }
 
   if(dUI.OnScreen!=nullptr) {
     if(dUI.OnScreen->NScrIdx==NSTHISNODE) {
@@ -121,8 +126,9 @@ void loop() {
       }
     }
   }
-
+  //---------------------------------------------------------------------------
   // Send Button Presses
+  //---------------------------------------------------------------------------
   uint8_t yButton = ButtonCapture->Button();
   if(yButton!=NAVKEYNONE) { 
     NavKey = dUI.ScreenNavigate(yButton);
@@ -146,41 +152,8 @@ void loop() {
         DITS.TxSetRemoteDevVal(NodeIndex, WHdevUID, WValue);
       } else if (ScrIdx==NSSETUP) {
         // Add Remote Node
-        if(WHdevUID==WHADDRNODE) { DITS.TxAddRemoteNode(WValue); }
+        //if(WHdevUID==WHADDRNODE) { DITS.TxAddRemoteNode(WValue); }
       }
     }
-  } // End Button NavKey.
-  /*
-  // Test.
-  #if !defined(RELAYNODE)
-    if (millis()-msTimer >= 2000) { 
-      msTimer=millis(); iTestStep++;
-      if (iTestStep==1) { DumpDITS(); } // Before anything.
-      if (iTestStep==2) {DITS.TxAddRemoteNode(0x0001);}
-      if (iTestStep==3) { DumpDITS(); } // Before anything.
-      // After getting RELAYNODE DIT Records; store its devUID(s) for access
-      if (iTestStep==4) {
-        DITSEngine::NodeDIT node = DITS.Node();
-        while(node.Next()) {
-          if(node.NRFAddr()==0x0001) {
-            uint8_t devCnt = 0;
-            DITSEngine::DeviceDIT dev = DITS.Device();
-            while (dev.Next(node.NodeIdx())) {
-              switch(devCnt) {
-                case 0: R1devUID = dev.DevUID(); break;
-                case 1: R2devUID = dev.DevUID(); break;
-                case 2: R3devUID = dev.DevUID(); break;
-                case 3: R4devUID = dev.DevUID(); break;
-              }
-              devCnt++;
-            }
-          }
-        }
-      }
-      if (iTestStep==5) {DITS.TxSetRemoteDevVal(0x0001, R1devUID, 1);}
-      if (iTestStep==6) {DITS.TxSetRemoteDevVal(0x0001, R1devUID, 0);}
-      if (iTestStep >= 10) iTestStep=0;
-    }
-  #endif
-  */
+  }
 }

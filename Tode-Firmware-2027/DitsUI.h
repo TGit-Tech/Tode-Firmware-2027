@@ -61,6 +61,7 @@ public:
   void Begin();
   uint8_t ScreenNavigate(uint8_t _Button);
   bool gotValue(uint16_t NScrIdx, uint16_t WHandleUID, uint16_t _Value);
+  void DitUpdate(uint8_t nodeIdx);
 
 private:
   DITImplement& Dits;
