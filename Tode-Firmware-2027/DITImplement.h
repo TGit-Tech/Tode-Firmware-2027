@@ -61,7 +61,7 @@ class DITImplement : public DITSEngine {
     void LoadDevices() {
       DITSEngine::DeviceDIT dev = this->Device();
       while (dev.Next(0)) { 
-        LDev.LoadDevice(dev.DevUID(),dev.DevType()); 
+        LDev.LoadDevice(dev.DevUID(),dev.DevType(),dev.DevAttr()); 
       }
     }
     void setRadioChannel(uint8_t _RadioChannel) {RadioChannel=_RadioChannel;}

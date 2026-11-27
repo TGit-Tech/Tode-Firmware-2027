@@ -108,11 +108,13 @@ uint8_t DitsUI::ScreenNavigate(uint8_t _Button) {
     }
     if(RtnNavKey==NAVSETVAL && OnScreen->SelectedWHandleUID()==WHADDDEV) {
       switch(OnScreen->SelectedWValue()) {
-        case DT_ONOFF:
+        case DT_ONOFF: {
           delete OnScreen; OnScreen=nullptr;
-          OnScreen = new AddOnOff(GFX,NSADDONOFF,Dits,DT_ONOFF);
+          uint8_t devUID = Dits.AddThisNodeDevice(DT_ONOFF, 0, "new");
+          if(devUID==BNONE) return NAVKEYNONE;
+          OnScreen = new DeviceEdit(GFX,NSDEVICEEDIT,Dits,devUID,DT_ONOFF);
           OnScreen->DisplayScreen();
-          return NAVKEYNONE;
+          return NAVKEYNONE;}
         case DT_DIST: 
           return NAVKEYNONE;
         case DT_STSTP3W: 
@@ -128,7 +130,7 @@ uint8_t DitsUI::ScreenNavigate(uint8_t _Button) {
       }
     }
   // Setup Menu Sub-Screens LEFT Exit->SetupMenu
-  } else if(OnScreen->NScrIdx == NSTODESETUP || OnScreen->NScrIdx == NSADDONOFF) {  
+  } else if(OnScreen->NScrIdx == NSTODESETUP || OnScreen->NScrIdx == NSDEVICEEDIT) {  
     if(RtnNavKey==NAVKEYLEFT) {
       DBUIINFO(("DitsUI::ScreenNavigate [NSTODESETUP||NSADDDEV] NAVKEYLEFT ->SetupMenu\n"))
       delete OnScreen; OnScreen=nullptr;
