@@ -49,6 +49,7 @@ public:
     bool Value(uint8_t _devUID, uint16_t _Value);
     bool NewOnOffDevice(uint8_t _devUID, uint8_t _Pin, uint8_t _pnMode, bool _ActiveLow = false);
     bool LoadDevice(uint8_t _devUID, uint8_t _devType);
+    bool DeleteDevice(uint8_t _devUID);
     void LDevProcLoop();
 
 private:

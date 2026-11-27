@@ -1,9 +1,10 @@
+#pragma once
+
 #include <TGTWidgets.h>
 #include "DITImplement.h"
 #include <TGTEbyte.h>
 
 #define NSTHISNODE  0x0000
-#define NAVNEWDEVICE  0xCA
 #define NAVGETVALS    0xCC
 #define NAVGETSETVAL  0xCB    // Only Used to verify a SETVAL
 
@@ -21,7 +22,6 @@
 #define NSSETUP      0x0A03
 #define NSTODESETUP  0x0A04
 #define NSSYSTEM     0x0A05
-#define NSADDDEV     0x0A06
 //-------------------------------------------------------------------------------------------------
 class SetupMenu : public TGTScreen {
 public:
@@ -54,26 +54,4 @@ private:
   TGTEbyte& Ebyte;
   char* tmpDITName; // General use array for DIT get Names
   void getValues(bool SelOnly = false);
-};
-//-------------------------------------------------------------------------------------------------
-class AddDevice : public TGTScreen {
-public:
-  AddDevice(Adafruit_GFX& _GFX, uint16_t _NScrIdx, DITImplement& _Dits)
-  : TGTScreen(_GFX,_NScrIdx), Dits(_Dits), node(_Dits.Node(0))
-  { tmpDITName = new char[Dits.DITNameChar]; }
-  ~AddDevice() { delete[] tmpDITName; }
-
-  byte Add_devType = BNONE;
-  uint8_t AdddevUID = BNONE;
-  byte Add_IOPin = 0;
-  byte Add_pinMode = 0;
-  byte Add_Active = 0;
-
-  void DisplayScreen();
-  uint8_t Navigate(uint8_t _Button) override;
-  
-private:
-  DITImplement& Dits;
-  DITSEngine::NodeDIT node;
-  char* tmpDITName; // General use array for DIT get Names
 };

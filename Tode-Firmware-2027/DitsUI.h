@@ -11,6 +11,7 @@
 #include <TGTWidgets.h>     // Setup Base Class
 #include "UINodeScreen.h"
 #include "UITodeSetup.h"
+#include "UIDevices.h"
 
 /* Defined in TGTWidgets Library
 // WNumVal DataTypes

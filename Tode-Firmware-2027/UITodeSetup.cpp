@@ -10,12 +10,7 @@
 #define WHRFFREQ        0xDA07
 
 // AddDevice Widget Handlers WH
-#define WHDEVNAME     0xDC0E
-#define WHDEVTYPE     0xDC0F
-#define WHIOPIN       0xDC10
-#define WHPINMODE     0xDC11
-#define WHACTIVE      0xDC12
-#define WHADDBTN      0xDC13
+
 
 // SetupMenu, Most do Screen Change except Add Remote Node WH
 #define WHADDRNODE    0xDB07
@@ -23,6 +18,7 @@
 // SetupMenu
 //-------------------------------------------------------------------------------------------------
 void SetupMenu::DisplayScreen() {
+  ClearScreen();
   NewWFLabel  (1,TFT_COL_X(0),  TFT_ROW_Y(0), F("Setup Menu"),    WHTITLE);
   NewWFLabel  (0,TFT_COL_X(0),  TFT_ROW_Y(1), F("AddRT"));
   NewWNumVal  (2,TFT_COL_X(6),  TFT_ROW_Y(1), TUINT+THEX+TSETPD,  WHADDRNODE);
@@ -45,6 +41,14 @@ void SetupMenu::DisplayScreen() {
   AddEnum(WHADDDEV,DT_DLSETPOINT,F("DLSetPoint"));
   AddEnum(WHADDDEV,DT_DLMATH,F("DLMath"));
 
+  DITSEngine::NodeDIT node = Dits.Node();
+  while(node.Next()) {
+    if(node.NodeIdx()==0) continue;
+    node.NGetName(tmpDITName);
+    AddEnum(WHDELRNODE, node.NodeIdx(),tmpDITName);
+    DBUIAAINFO((node.NodeIdx()),(tmpDITName),("SetupMenu::DisplayScreen AddEnum(WHDELRNODE, (NodeIdx),(tmpDITName))"))
+  }
+
   DITSEngine::DeviceDIT dev = Dits.Device();
   while (dev.Next(NSTHISNODE)) {
     dev.DGetName(tmpDITName);
@@ -56,12 +60,39 @@ uint8_t SetupMenu::Navigate(uint8_t _Button) {
   uint8_t RtnNavKey = OnScreenNavigate(_Button);
   DBUIAAENTER((_Button,HEX),(RtnNavKey,HEX),("SetupMenu::Navigate(_Button)[RtnNavKey]\n"))
 
-  if(RtnNavKey==NAVSETVAL && SelectedWHandleUID()==WHADDRNODE) { 
-    Dits.TxAddRemoteNode(SelectedWValue());
-    DBUIAINFO((SelectedWValue(),HEX),("SetupMenu::Navigate [Dits.TxAddRemoteNode(RFAddr)]\n"))
-    return NAVKEYNONE;
+  if(RtnNavKey==NAVSETVAL) {
+
+    // Add/Edit Device goes to Add/Edit Device Screen i.e. Handled by DitsUI ScreenNavigate.
+    if(SelectedWHandleUID()==WHADDRNODE) { 
+      Dits.TxAddRemoteNode(SelectedWValue());
+      DBUIAINFO((SelectedWValue(),HEX),("SetupMenu::Navigate [Dits.TxAddRemoteNode(RFAddr)]\n"))
+      return NAVKEYNONE;
+    }
+    if(SelectedWHandleUID()==WHDELRNODE) {
+      Dits.DelRemoteNode(SelectedWValue());
+      DelEnums(WHDELRNODE);
+      DITSEngine::NodeDIT node = Dits.Node();  // Update Delete Node Enum List
+      while(node.Next()) {
+        if(node.NodeIdx()==0) continue;
+        node.NGetName(tmpDITName);
+        AddEnum(WHDELRNODE, node.NodeIdx(),tmpDITName);
+      }
+      return NAVKEYNONE;
+    }
+    if(SelectedWHandleUID()==WHDELDEV) {
+      Dits.DelThisNodeDevice(SelectedWValue());
+      Dits.LDev.DeleteDevice(SelectedWValue());
+      DelEnums(WHDELDEV);
+      DelEnums(WHEDITDEV);
+      DITSEngine::DeviceDIT dev = Dits.Device();
+      while (dev.Next(NSTHISNODE)) {          // Update Delete Device Enum List
+        dev.DGetName(tmpDITName);
+        AddEnum(WHDELDEV,dev.DevUID(),tmpDITName);
+        AddEnum(WHEDITDEV,dev.DevUID(),tmpDITName);
+      }
+    }
+    return RtnNavKey;
   }
-  return RtnNavKey;
 }
 //-------------------------------------------------------------------------------------------------
 // TodeSetup
@@ -119,56 +150,4 @@ void TodeSetup::getValues(bool SelOnly) {
   if(SelectedWHandleUID()==WHNETID  ||!SelOnly) { gotValue(NSTODESETUP, WHNETID,   Ebyte.NetID()); }
   if(SelectedWHandleUID()==WHRFADDR ||!SelOnly) { gotValue(NSTODESETUP, WHRFADDR,  Ebyte.Address()); }
   if(SelectedWHandleUID()==WHRFFREQ ||!SelOnly) { gotValue(NSTODESETUP, WHRFFREQ,  Ebyte.Frequency()); }
-}
-//-------------------------------------------------------------------------------------------------
-// AddDevice
-//-------------------------------------------------------------------------------------------------
-void AddDevice::DisplayScreen() {
-  ClearScreen();
-  node.NGetName(tmpDITName);
-  NewWFLabel  (1,TFT_COL_X(0), TFT_ROW_Y(0), F("Add On/Off"),WHTITLE);
-  NewWFLabel  (0,TFT_COL_X(0), TFT_ROW_Y(1), F("Name:"));
-  NewWCharVal (2,TFT_COL_X(5), TFT_ROW_Y(1), Dits.DITNameChar, true, WHDEVNAME);
-  NewWFLabel  (0,TFT_COL_X(0), TFT_ROW_Y(2), F("Pin:"));
-  NewWNumVal  (3,TFT_COL_X(4), TFT_ROW_Y(2), TBYTE+TDEC+TSET, WHIOPIN,3,54);
-  NewWFLabel  (0,TFT_COL_X(0), TFT_ROW_Y(3), F("pinMode:"));
-  NewWEnumVal (4,TFT_COL_X(8), TFT_ROW_Y(3), true, WHPINMODE);
-  NewWFLabel  (0,TFT_COL_X(0), TFT_ROW_Y(4), F("Active:"));
-  NewWEnumVal (5,TFT_COL_X(7), TFT_ROW_Y(4), true, WHACTIVE);
-  NewWFLabel  (6,TFT_COL_X(5), TFT_ROW_Y(6), F("[ADD]"),WHADDBTN);  
-
-  AddEnum(WHACTIVE,ACTIVEHION,F("HiON"));
-  AddEnum(WHACTIVE,ACTIVELOWON,F("LoON"));
-  AddEnum(WHPINMODE,INPUT,F("IN"));
-  AddEnum(WHPINMODE,OUTPUT,F("OUT"));
-  AddEnum(WHPINMODE,INPUT_PULLUP,F("INUP"));
-    
-  // Use tmpDITName for new name.
-  memset(tmpDITName, 0, Dits.DITNameChar);
-  gotValue(NSADDDEV, WHDEVNAME, tmpDITName);
-}
-uint8_t AddDevice::Navigate(uint8_t _Button) {
-  uint8_t RtnNavKey = OnScreenNavigate(_Button);
-  DBUIAENTER((RtnNavKey,HEX),("TodeSetup::Navigate (RtnNavKey)\n"))
-
-  if(RtnNavKey==NAVSETVAL) {
-    if(SelectedWHandleUID()==WHIOPIN) {Add_IOPin=SelectedWValue();}
-    if(SelectedWHandleUID()==WHPINMODE) {Add_pinMode=SelectedWValue();}
-    if(SelectedWHandleUID()==WHACTIVE) {Add_Active=SelectedWValue();}
-  }
-  if(RtnNavKey==NAVKEYGET) {
-    if(SelectedWHandleUID()==WHADDBTN) {
-      DBUIAAINFO((Add_devType),(tmpDITName),("DitsUI::AddDevice Dits.AddThisNodeDevice(devType, Name)"))
-      uint8_t AdddevUID = Dits.AddThisNodeDevice(Add_devType, 0x00, tmpDITName);
-      if(AdddevUID!=BNONE) {
-        if(Add_devType==DT_ONOFF) {
-          //NewOnOffDevice(uint8_t _devUID, uint8_t _Pin, uint8_t _pnMode, bool _ActiveLow = false)
-          Dits.LDev.NewOnOffDevice(AdddevUID, Add_IOPin, Add_pinMode, Add_Active);
-          NewWFLabel  (0,TFT_COL_X(0), TFT_ROW_Y(9), F("...Device Added!"));
-          return NAVNEWDEVICE;
-        }
-      }
-    }
-  }
-  return RtnNavKey;
 }
