@@ -30,5 +30,8 @@ private:
   uint8_t devAttr = 0;
   char* tmpDITName; // General use array for DIT get Names
   OnOff* devOnOff = nullptr;
-
+  const __FlashStringHelper* EnumPinModes(uint8_t idx) {  // Tode Pin-Modes defined in LDevices.h
+    static const __FlashStringHelper* Modes[] = {F("HiON"), F("LoON"), F("UpHiON"), F("UpLoON")};
+    return Modes[idx & 0x03];
+  }
 };
